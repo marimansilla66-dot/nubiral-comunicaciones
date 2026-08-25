@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.3/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{overflow-y:scroll;scrollbar-gutter:stable;}
+    body{background:#0D0D0D;font-family:'Montserrat',sans-serif;color:#fff;}
+    ::-webkit-scrollbar{width:7px;height:7px;}::-webkit-scrollbar-track{background:#181818;}
+    ::-webkit-scrollbar-thumb{background:#333;border-radius:3px;}
+    input,select,textarea,button{font-family:'Montserrat',sans-serif;}
+    button:not(:disabled),select:not(:disabled){transition:box-shadow .13s ease,filter .13s ease;}
+    button:not(:disabled):hover,select:not(:disabled):hover{box-shadow:0 0 0 1.5px rgba(223,255,81,.55);filter:brightness(1.1);}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    // ══ CONFIG — PEGÁ ACÁ la URL de tu Apps Script (Implementar → Aplicación web → /exec) ══
+    window.API_URL = 'https://script.google.com/macros/s/AKfycbwODtzvBROJ9kPm0p27j6YgnIPJ102MeDhUTrPUd4hLOhoxPL3UuJB2jW_4uzt7D2wi/exec';
+
+    // Config estática (feriados, templates, backlog, histórico, taxonomías) — se edita acá.
+    window.INITIAL_FERIADOS = [{"md": "01-01", "nombre": "Año Nuevo Feriado Global", "paises": ["Global"]}, {"md": "01-12", "nombre": "Día de Reyes (COL)", "paises": ["COL"]}, {"md": "02-02", "nombre": "Día de la Constitución (MX)", "paises": ["MX"]}, {"md": "02-16", "nombre": "Carnaval (ARG Y URU)", "paises": ["ARG", "URU"]}, {"md": "03-16", "nombre": "Natalicio de Benito Juárez (MEX)", "paises": ["MX"]}, {"md": "03-23", "nombre": "Día de San José (puente festivo trasladado al lunes COL", "paises": ["COL"]}, {"md": "04-02", "nombre": "Malvinas (ARG)", "paises": ["ARG"]}, {"md": "04-19", "nombre": "Desembarco de los 33 Orientales uru", "paises": ["URU"]}, {"md": "05-01", "nombre": "Día del trabajador FERIADO GLOBAL", "paises": ["Global"]}, {"md": "05-18", "nombre": "Ascensión del Señor COL", "paises": ["COL"]}, {"md": "05-21", "nombre": "Glorias Navales (CH)", "paises": ["CH"]}, {"md": "05-25", "nombre": "Revolución de Mayo ARG", "paises": ["ARG"]}, {"md": "06-08", "nombre": "Corpus Christi (COL)", "paises": ["COL", "CH"]}, {"md": "06-15", "nombre": "Paso a la Inmortalidad del Gral Güemes (ARG)", "paises": ["ARG"]}, {"md": "06-18", "nombre": "Natalicio del Gral. Artigas (UR)", "paises": ["URU"]}, {"md": "06-20", "nombre": "Paso a la Inmortalidad del Gral. Manuel Belgrano (ARG)", "paises": ["ARG"]}, {"md": "06-29", "nombre": "San Pedro y San Pablo (CHILE)", "paises": ["CH"]}, {"md": "07-09", "nombre": "Día de la Independencia (ARG)", "paises": ["ARG"]}, {"md": "07-10", "nombre": "ARG Día no laborable con fines turísticos", "paises": ["ARG"]}, {"md": "07-13", "nombre": "Día de Nuestra Señora del Rosario de Chiquinquirá,", "paises": ["CH"]}, {"md": "07-16", "nombre": "Virgen del Carmen (CH)", "paises": ["CH"]}, {"md": "07-18", "nombre": "Jura de la Constitución (URU)", "paises": ["URU"]}, {"md": "07-20", "nombre": "Día de la Independencia (col)", "paises": ["COL"]}, {"md": "08-07", "nombre": "Batalla de Boyacá COL", "paises": ["COL"]}, {"md": "08-15", "nombre": "Asunción de la Virgen (CH)", "paises": ["CH"]}, {"md": "08-17", "nombre": "Asunción (COL)", "paises": ["COL"]}, {"md": "08-25", "nombre": "Declaratoria de la Independencia (UR)", "paises": ["URU"]}, {"md": "09-16", "nombre": "Día de la Independencia (MX)", "paises": ["MX"]}, {"md": "09-18", "nombre": "Fiestas Patrias (CH)", "paises": ["CH"]}, {"md": "09-19", "nombre": "Glorias del Ejército (CH)", "paises": ["CH"]}, {"md": "10-12", "nombre": "Diversidad Cultural (ARG COL CH Y URU)", "paises": ["ARG", "COL", "CH", "URU"]}, {"md": "10-31", "nombre": "Día de las Iglesias Evangélicas y Protestantes CH", "paises": ["CH"]}, {"md": "11-01", "nombre": "Todos los Santos (CH)", "paises": ["CH"]}, {"md": "11-02", "nombre": "Todos los Santos (COL)", "paises": ["COL"]}, {"md": "11-16", "nombre": "Revolución Mexicana (MX)", "paises": ["MX"]}, {"md": "11-23", "nombre": "Día de la Soberanía Nacional ARG", "paises": ["ARG"]}, {"md": "12-08", "nombre": "Inmaculada Concepción (ARG)", "paises": ["ARG"]}, {"md": "12-25", "nombre": "Navidad (Feriado Global)", "paises": ["Global"]}];
+    window.INITIAL_TEMPLATES = [{"categoria": "Aniversario Nubiral", "titulo": "Aniversario Nubiral N°14", "texto": "Aniversario Nubiral N°14 (Mail)🎉 ¡Nubiral cumple 14 años! 🎂🤘\n\nCelebramos cada paso que dimos con orgullo, alegría y esa energía que nos hace únicos.\n\n✅ 14 años de innovación constante.\n✅ 14 años creciendo con pasión, talento y generosidad.\n✅ 14 años construyendo juntos una compañía que transforma el presente y potencia el futuro.\n\nGracias a cada uno de ustedes por ser parte de esta historia y hacerlo posible.\n\n¡Vamos por mucho más, siempre a todo volumen!🎸🚀"}, {"categoria": "Campaña Certificaciones", "titulo": "Hola a todos", "texto": "¡Hola a todos! Esperamos que estén muy bien. Queremos contarles que estamos buscando interesados en realizar alguna de las siguientes certificaciones antes del 30 de noviembre de 2024, para seguir fortaleciendo nuestros conocimientos y la relación con nuestros partners. Si te interesa, no dudes en contactarte a talento@nubiral.com¡Agradecemos el compromiso de siempre! ¡Saludos!"}, {"categoria": "Certificados Semestral", "titulo": "Hola Nubirals!En esta oportunidad queremos destacar a…", "texto": "Hola Nubirals!En esta oportunidad queremos destacar a cada una de las personas que con mucha dedicación y esfuerzo, apostó a seguir especializándose, logrando nuevas certificaciones en este 2023. Los felicitamos a todos ellos y estamos orgullosos de que nos acompañen contribuyendo al crecimiento del negocio."}, {"categoria": "EVENTOS & PREMIOS", "titulo": "Family Day:¡Buen día Nubirals", "texto": "Family Day:¡Buen día Nubirals!\n🤹Queremos generar un espacio de alegría y diversión que incluya a los más pequeños de las familias de Nubiral. Por este motivo, abriremos las puertas de nuestras oficinas el miércoles 11/9 de 10 a 13 hs para disfrutar juntos de un espacio recreativo especialmente diseñado para ellos! 🤸\nPara organizarlo les pedimos que nos ayuden completando el siguiente formulario, para confirmar la cantidad de niños, las edades y cualquier restricción alimentaria que debamos tener en cuenta.📝\n¡Esperamos contar con tu participación y la de tus seres queridos!"}, {"categoria": "EVENTOS & PREMIOS", "titulo": "Felicidades por tus 5 años en Nubiral", "texto": "¡Felicidades por tus 5 años en Nubiral! 🎉 ¡Hola Sabri!\n\nEstamos muy emocionados de celebrar con vos: ¡tus 5 años en Nubiral! 🎉✨ Gracias por tu dedicación, esfuerzo y todo lo que aportas día a día. Te valoramos mucho, y es por eso que queremos reconocer tu compromiso con algo especial.\n\nTe adjuntamos las opciones de viaje disponibles como parte de tu regalo de aniversario. Si necesitas ajustar algo, no dudes en ponerte en contacto con nuestra agencia de viajes a través del siguiente correo: laura@etonnant.tur.ar. Ellos estarán disponibles para ayudarte a organizar una experiencia única.\n\n¡Esperamos que disfrutes de este merecido reconocimiento y sigas brillando en Nubiral!\n\nUn gran abrazo,"}, {"categoria": "EVENTOS & PREMIOS", "titulo": "Fiesta fin de año", "texto": "Fiesta fin de año: Buenas tardes Nubirals! 🤩\nQueríamos recordarles que se viene nuestra fiesta de fin de añoo!🐧 El jueves 21 de noviembre, a partir de las 20:30 hs, nos reuniremos en Augusto para cerrar el año con una noche de buena comida, música y muchas risas.\nEs importante completar el siguiente formulario para confirmar su asistencia, y mencionarnos si cuentan con alguna restricción alimentaria.\n¡Nos vemos dentro de muy poco! 🥂🎉"}, {"categoria": "EVENTOS & PREMIOS", "titulo": "Fiesta Fin de Año Colombia", "texto": "¡Fiesta Fin de Año Colombia! 😎 ( Mail) ¡Hola equipo!\n\n¡La fiesta de fin de año está cada vez más cerca y queremos que formes parte de este gran festejo! El jueves 12 de diciembre, a partir de las 19:00 hs, nos reuniremos en Fantasma para cerrar el año con una celebración especial. Hemos realizado un ajuste en la locación para garantizar una experiencia aún mejor para todos.\n\nNos espera una noche llena de buena comida, música y momentos inolvidables para cerrar el año.\n\nTe invitamos a completar este formulario para confirmar tu asistencia y detallar cualquier restricción alimentaria que debamos considerar.\n\n¡Estamos emocionados por verte y brindar juntos por todo lo que logramos este año!\n¡Te esperamos!"}, {"categoria": "EVENTOS & PREMIOS", "titulo": "Nubiral Point- Aniversario Nubiral  ¡Nubirals", "texto": "Nubiral Point- Aniversario Nubiral ( Mail) ¡Nubirals! Se viene un nuevo Nubiral Point✨\n\nEl jueves 22/5 a las 17 hs (ARG) los invitamos a conectarse desde donde estén para celebrar juntos el Aniversario de Nubiral. 💙🌍\n\nCelebramos 14 años de crecimiento, transformación y un equipo que sigue dejando su huella en cada paso.\n\nCompartiremos un encuentro virtual global para celebrar este camino que seguimos construyendo juntos. 🚀\n\n¡Te esperamos!"}, {"categoria": "EVENTOS & PREMIOS", "titulo": "Sorteo Fin de Año-  ¡Hola Ricardo", "texto": "Sorteo Fin de Año- ( Mail) ¡Hola Ricardo!😎\n\n📣Queremos agradecerte por participar del sorteo de fin de año y compartirte que tu premio ya se encuentra disponible dentro de la plataforma Mendel.\n\nPodrás acceder al mismo seleccionando la campaña -Nubiral - Sorteo de fiesta de fin de año- y utilizarlo de manera libre, sin restricciones de rubro. En caso que el crédito lo consumas en diferentes pagos, no olvides seleccionar la campaña correspondiente en cada compra.\n\nA tener en cuenta, su vigencia es de 6 meses, pero es importante que tengas presente que el crédito habitual continua teniendo un vencimiento mensual.\n\n¡Esperamos que disfrutes de este premio!🤩\n\nUn gran abrazo,"}, {"categoria": "EVENTOS & PREMIOS", "titulo": "último Nubiral Point", "texto": "último Nubiral Point: ¡Hola, Nubirals! 😊\nEste año se acerca a su fin y tenemos una invitación especial para todos ustedes. ¡El jueves 19/12 a las 16:30 hs ARG celebraremos nuestro último Nubiral Point del 2024!\nSerá un encuentro virtual global donde haremos un balance del año y daremos a conocer los premiados del Nubiral Recognition. 🏅\n🌎 Nos encantaría que todos puedan participar y conectar, sin importar desde dónde se encuentren. ¡Esperamos verlos para disfrutar y celebrar juntos! ✨\n¡Nos vemos el 19!"}, {"categoria": "Feriados", "titulo": "Feriados días no laborables", "texto": "Feriados días no laborables: Nubirals, esperamos se encuentren muy bien.Les informamos que el día jueves 01 de mayo será feriado en todos los países por el día del trabajador. En cuanto al viernes 02 de mayo, en Argentina será día no laborable. Recuerden conversar con sus líderes, si fuera necesario, para coordinar y garantizar el cumplimiento de los compromisos asumidos con clientes y proveedores. En el resto de los países, el viernes 02 se trabajará de manera habitual."}, {"categoria": "Feriados", "titulo": "Festividades", "texto": "Festividades: Nubirals!!\nSe acercan las fiestas y queremos que puedan disfrutarlas al máximo con sus seres queridos. Por eso les contamos que este año otorgaremos como libres los días lunes 23, martes 24, lunes 30 y martes 31 de diciembre para que puedan extender su descanso y celebrar como se merecen. 🎁\nQuienes tengan compromisos asumidos con clientes, les pedimos que conversen con sus líderes para poder atenderlos y a su vez coordinar para disfrutar de este beneficio sin dejar de cumplir con nuestras responsabilidades. 💡\nAprovechemos este tiempo para recargar energías, compartir momentos especiales y volver listos para arrancar un nuevo año lleno de desafíos y logros.🚀"}, {"categoria": "Feriados", "titulo": "Nubirals, esperamos se encuentren muy bien.Les informamos…", "texto": "Nubirals, esperamos se encuentren muy bien.Les informamos que mañana miércoles 09/07 es feriado en Argentina para tenerlo en cuenta a la hora de contactar a los colaboradores residentes allí."}, {"categoria": "GPTW", "titulo": "Extender Encuesta", "texto": "Extender Encuesta: Nubirals! Les compartimos las últimas novedades.\n📣Decidimos extender la fecha de cierre de la encuesta GPTW hasta mañana 11/03 a las 17 hs.\nEntre todos hemos logrado un buen índice de participación, pero si aún no completaste la encuesta y queres sumar tu opinión todavía estas a tiempo! Nos encantaría poder escuchar todas las voces. ✨\nRevisa tu correo que hoy te estará llegando un último recordatorio para acceder al link 💌\nPróximamente estaremos compartiendo los resultados.\nGracias a todos por su compromiso!!!"}, {"categoria": "GPTW", "titulo": "Lanzamiento", "texto": "Lanzamiento: ¡Nubirals!\nEstamos muy contentos de contarles que este año lanzaremos nuevamente la encuesta de medición de clima GPTW de manera regional 🌎\nEn Nubiral, cada uno de ustedes es fundamental, y por eso queremos conocer cómo se sienten, qué aspectos valoran y qué podemos mejorar para seguir creciendo juntos.\n👉 El jueves 20/02 recibirán en su correo la encuesta, diseñada para evaluar cómo vivieron el 2024 y cómo están hoy, sin importar su antigüedad en la compañía ¡Queremos escuchar todas las voces!\n✨ Les recordamos que todas las respuestas serán tratadas con absoluta confidencialidad, garantizando un espacio seguro y abierto para compartir sus opiniones.\nAgradecemos su compromiso y participación en este proceso que construimos entre todos y que es clave para seguir fortaleciendo nuestra cultura ❤️"}, {"categoria": "GPTW", "titulo": "Ranking", "texto": "Ranking: Nubirals, ¡tenemos una gran noticia para compartir! ✨\nPor primera vez, Nubiral formó parte del Ranking Nacional de los Mejores Lugares para Trabajar en Argentina 2025 de Great Place to Work, alcanzando el puesto #10 en nuestra categoría🏆\nEste logro es el resultado de nuestra encuesta GPTW 2024 y representa el último ranking basado en esa medición. Ser reconocidos en este ranking es un reflejo del espíritu que compartimos en Nubiral y de la cultura que construimos entre todos. Hoy celebramos este logro con orgullo y gratitud.\n🙌 ¡Gracias a todos por ser parte de esta comunidad y por hacer de Nubiral un espacio donde las personas y las ideas pueden crecer!\nLes compartimos algunas fotos de la premiación que tuvo lugar en el día de ayer🫶\n#GreatPlaceToWork #GPTWArgentina2025 #OrgulloNubiral 🚀"}, {"categoria": "GPTW", "titulo": "Resultados de nuestra última encuesta GPTW 2025", "texto": "Resultados de nuestra última encuesta GPTW 2025🏆 ( Mail) Nubirals, es un orgullo enorme compartir con ustedes los resultados de la última encuesta y contarles que obtuvimos la Certificación Great Place To Work 🏅en Argentina 🇦🇷 Colombia 🇨🇴y Mexico 🇲🇽\n¡Estamos muy contentos de seguir alcanzando resultados excepcionales juntos!\nValoramos enormemente su participación y la confianza que siempre nos brindan. Conocer su feedback es esencial para continuar creciendo y construir un gran lugar para trabajar.\nEl esfuerzo, la dedicación y el compromiso de cada uno de ustedes hacen que Nubiral sea único 🙌 Nubiral lo construimos entre todos, y cada paso es un logro compartido 🌟"}, {"categoria": "Info Util", "titulo": "Actualización Slack - 2025-  Nubirals, buenas tardes", "texto": "Actualización Slack - 2025- ( Mail) Nubirals, buenas tardes!\n\nEn esta oportunidad queríamos contarles que a partir del 15 de marzo de 2025, Slack dejará de admitir las siguientes versiones de aplicaciones y navegadores:\nAplicación para computadora de Slack: 4.36 y versiones anteriores\nAplicación para dispositivos móviles de Slack: 24.02.40 y versiones anteriores\nNavegadores: Safari 17, Chrome 122, Edge 122, Firefox 123 y versiones anteriores\nA continuación les compartimos un link en el que encontrarán una guía para verificar qué versión de Slack tienen actualmente instalada en sus dispositivos y también cómo realizar la actualización de la misma.\nTambién les compartimos los pasos a seguir para realizar las actualizaciones de los navegadores mencionados.\nActualizar Google Chrome\nActualizar Safari\nActualizar Edge\nActualizar Firefox\nEn los dispositivos móviles deberán ingresar en su tienda de aplicaciones (Play Store en Android, App Store en iOS) e instalar la última versión disponible de Slack.\nPara poder seguir usando Slack sin interrupción, recomendamos que lo hagan antes de la fecha indicada.\nPueden contactar al equipo de IT Support por cualquier consulta que surja.\n\nSaludos!"}, {"categoria": "Info Util", "titulo": "Bienvenidos a PeopleForce", "texto": "Bienvenidos a PeopleForce ( Mail)\nNubirals, buenos días!\nEstamos emocionados de anunciar un paso más hacia la mejora continua de nuestros procesos: a partir de ahora, contaremos con People Force como nueva plataforma de gestión. Sabemos lo importante que es tener herramientas que nos permitan trabajar mejor y de manera más ágil. Con People Force, buscamos facilitar los procesos administrativos y potenciar la experiencia de cada miembro del equipo. 🚀\n\n¿Qué es People Force?\nEs una solución moderna y eficiente diseñada para simplificar la gestión de distintos procesos, ofreciendo una experiencia intuitiva para todos. Desde la autogestión de datos hasta herramientas avanzadas para el seguimiento y desarrollo profesional, esta plataforma nos ayudará a centralizar y trabajar de manera global. 🇨🇴 🇲🇽 🇦🇷 🇺🇾\n\n¿Qué podrás hacer en People Force?\n📝 Actualizar y gestionar tus datos personales de manera sencilla.\n🌴 Registrar tus licencias y solicitudes de días libres.\n📄 Acceder a tus recibos de sueldo y documentos importantes.\n🎯 Realizar evaluaciones de desempeño y seguimiento de objetivos.\n\n¿Qué sigue?\nPróximamente, estaremos incorporando nuevas funcionalidades para seguir ajustándonos a las necesidades y enriquecer la experiencia.\n\n📅 En breve recibirás un correo con tus credenciales para ingresar a la plataforma. Adjunto encontrarás el instructivo que te ayudará a explorar la herramienta.\n\nQuedamos atentos a cualquier consulta que pueda surgir al channel de Slack #peopleteam-consultas.\n\nSaludos,"}, {"categoria": "Info Util", "titulo": "Disponibilidad Oficinas Sucre 11/09", "texto": "¡Disponibilidad Oficinas Sucre 11/09! Buenas a todos! 😊\n\nSe acerca el Family Day y estamos muy contentos por la gran convocatoria que hemos tenido.\n\nLes pedimos que tengan en consideración, para la organización de su agenda, que debido al evento, el miércoles 11/09 las oficinas de Sucre podrán tener mayor concurrencia que la habitual.\n\n¡Los esperamos! 🤸🏼"}, {"categoria": "Info Util", "titulo": "Novedades ( Salida Pato Savio).", "texto": "Novedades ( Salida Pato Savio). Buenas tardes, Nubirals!\n\nQueremos compartirles que este viernes, Pato Savio estará dejando la compañía para emprender un nuevo reto profesional. Agradecemos mucho su dedicación y calidad humana durante el tiempo que estuvo con nosotros y le deseamos todos los éxitos en sus nuevos proyectos.\n\nEstaremos trabajando en su reemplazo para seguir fortaleciendo nuestra Estrategia Comercial.\n\n¡Le deseamos lo mejor en esta nueva etapa que emprende!\n\nSaludos,"}, {"categoria": "Info Util", "titulo": "Nubiral Insigths Center", "texto": "Nubiral Insigths Center ( Mail)📣 ¡Hola equipo!\n\nQueremos compartirles que sumamos un nuevo espacio disponible en la Biblioteca de PeopleForce. A partir de hoy van a encontrar el Nubiral Insights Center, un repositorio con recursos estratégicos y comerciales diseñados para ayudarles a comprender y comunicar mejor nuestras soluciones.\n\nEste espacio reúne materiales como:\n- Casos de éxito\n- Ebooks & Papers\n- Brochures y One Sheets\n- Guías Técnicas y Whitepapers\n- Nubiral Deck\n- Videos institucionales\n\n🔎 Lo van a encontrar junto al ya conocido Kit Marketing & Communications, que sigue funcionando como siempre para acceder a templates de presentaciones, manual de marca, portadas de LinkedIn, fondos de Meet, entre otros recursos prácticos para el día a día. Aquellos que continúen usando el Drive lo verán replicado de la misma forma.\n\n⚠ Sobre el uso de templates ⚠\n\nEs importante no modificar colores, logos y tipografías, y evitar el uso de versiones antiguas. Además, les recomendamos siempre trabajar estos materiales —especialmente las presentaciones— de forma online, y no de manera local.\nEn el caso de las presentaciones externas donde se hayan aplicado varias modificaciones sobre el template, los invitamos a compartir el link a design@nubiral.com para que el equipo de Marketing pueda validarlo.\n\nUnificar nuestra imagen y mensajes no solo potencia nuestra marca, sino que también nos posiciona con mayor claridad y profesionalismo frente a clientes y partners. 🚀\n\n¡Muchas gracias a todos!"}, {"categoria": "Info Util", "titulo": "Nuevo Proceso para Solicitud de Capacitaciones /…", "texto": "Nuevo Proceso para Solicitud de Capacitaciones / Certificaciones ( Mail) Nubirals, buenos días!\n\n📣Con el objetivo de optimizar nuestros procesos y brindarles una mejor experiencia, les informamos que a partir de ahora, la solicitud de certificaciones o capacitaciones que anteriormente se realizaba por correo electrónico mediante el formulario R.026, se gestionará a través de PeopleForce. Esta nueva modalidad permitirá un seguimiento más ágil y organizado de todas las solicitudes.\n\nA continuación les compartimos el instructivo donde podrán encontrar el paso a paso para gestionar las solicitudes de formación a través de PeopleForce. 📝\n\nAprovechamos la oportunidad para compartirles adjunto el Programa de Incentivos por Certificaciones Nubiral 🏅actualizado, en el cual hemos incorporado nuevas certificaciones.\n\n¡Quedamos a disposición por cualquier consulta!\n\nSaludos,"}, {"categoria": "Info Util", "titulo": "Recordatorio Family Day.", "texto": "Recordatorio Family Day. Nubirals,\n\nLes recordamos que el miércoles 11/9 de 10 a 13 hs, estaremos celebrando el Family Day en la oficina de Sucre junto a los mini nubis que se quieran sumar. 🤸🏼\n\nLes pedimos completen el siguiente formulario a quienes no lo hayan hecho todavía donde nos informarán sobre la cantidad de niños que nos acompañarán, las edades y cualquier restricción alimentaria que debamos tener en cuenta.📋 Tienen tiempo hasta el día viernes 30/08 para confirmar la asistencia.\n\n¡Esperamos contar con su participación y la de sus seres queridos!💫\n\nSaludos,"}, {"categoria": "Info Util", "titulo": "Regalo Fin de Año", "texto": "Regalo Fin de Año! Buenas tardes Nubirals! ✨\n\nQueremos asegurarnos de que reciban su regalo de fin de año sin inconvenientes. Para eso necesitamos que por favor completen este formulario antes del jueves 05/12 y nos indiquen el domicilio donde desean recibirlo, tal como aparece en Google Maps.\n\nImportante:\n• En esa dirección debe haber una persona disponible para recibir el paquete.\n• Si están en Buenos Aires, tienen la opción de recibirlo en la oficina y retirarlo antes del viernes 20/12/2024. (Luego de esa fecha las oficinas se encontrarán cerradas y volverán a habilitarse el 06/01/2025).\n• Una vez enviado el formulario con los datos de entrega, no podemos modificarlo.\n\n¡Gracias por su colaboración y felices fiestas!🤩"}, {"categoria": "Info Util", "titulo": "Renovación - Oficinas Pampa  Hola, Nubirals", "texto": "¡Renovación - Oficinas Pampa ( Mail) Hola, Nubirals! 👋 ¿Cómo están?\n\nEsperamos que estén disfrutando la renovación de nuestras oficinas de Pampa. ¡Estamos listos para vivirla juntos! 🎉\n\nPara que podamos mantener este espacio en las mejores condiciones, les recordamos algunos detalles clave:\n\n✅ Dejar los espacios de trabajo despejados al finalizar el día.\n✅ Mantener el orden en las salas de reuniones después de usarlas.\n✅ Lavar los utensilios que cada uno utiliza.\n\nCon estos pequeños gestos y la buena onda de siempre, seguimos cuidando y disfrutando de nuestro lugar.\n\n¡Gracias por la colaboración de todos!\n🚀 ¡Nos vemos en la oficina!"}, {"categoria": "Nubiral Recognition", "titulo": "Nubiral Plus Nubirals", "texto": "Nubiral Plus Nubirals! Tenemos la gran alegría de compartir con ustedes quienes han sido premiados a lo largo del primer semestre del 2024, a través de nuestro reconocimiento Nubiral Plus🤗👏\n¡Felicitamos muy especialmente a cada uno de ellos por su entrega, compromiso y dedicación!🚀🐧"}, {"categoria": "Nubiral Recognition", "titulo": "Teammate", "texto": "Teammate: ¡Hola Nubirals! 😊\nQueremos recordarte que aún estás a tiempo para participar en el reconocimiento Nubiral Teammate y destacar a ese compañero o compañera que marca la diferencia con su empatía, compañerismo y espíritu colaborativo. 💙\n🗓️ Fecha límite: ¡Hasta el martes 03/12!\n👉 Completa tu nominación a través del siguiente formulario: Nubiral Teammate\nNo pierdas esta oportunidad de reconocer a quienes inspiran y fortalecen nuestra cultura cada día. 🙌\n¡Gracias por ser parte de esta iniciativa!"}, {"categoria": "Referidos", "titulo": "https://nubiral.peopleforce.io/careers", "texto": "https://nubiral.peopleforce.io/careers"}, {"categoria": "Referidos", "titulo": "Les compartimos las vacantes libres que tenemos hasta el…", "texto": "Les compartimos las vacantes libres que tenemos hasta el momento:"}, {"categoria": "Referidos", "titulo": "Los invitamos a conocer la Política de Referidos 2025…", "texto": "Los invitamos a conocer la Política de Referidos 2025 disponible en Información para Colaboradores en la Biblioteca de PeopleForce."}, {"categoria": "Referidos", "titulo": "Nubirals, ¡Tenemos búsquedas abiertas", "texto": "Nubirals, ¡Tenemos búsquedas abiertas!"}, {"categoria": "Welness Check in", "titulo": "Encuesta Wellness Check In  ¡Buenas tardes", "texto": "Encuesta Wellness Check In ( Mail) ¡Buenas tardes!\n\n¡Queremos saber cómo estás viviendo tu experiencia en Nubiral! 🚀Este año estamos explorando nuevas formas de mantenernos conectados y recibir tu feedback.\nEn Nubiral creemos que es clave entender cómo te sentís para acompañarte en cada paso de este viaje juntos.\nPara llevar a cabo este objetivo, te compartimos el link de una encuesta de pulso y quedamos a disposición por cualquier consulta.📋\n\n¡Saludos!"}];
+    window.INITIAL_BACKLOG = [{"tipo": "Info Útil", "titulo": "Feriados/ Dia no laborables", "nota": "Sin fecha", "objetivo": "Informar", "canal": ["Slack"], "audiencia": [], "responsable": "HRBP"}, {"tipo": "Info Útil", "titulo": "Acreditación Haberes", "nota": "Sin fecha", "objetivo": "Informar", "canal": ["Mail"], "audiencia": ["Global"], "responsable": "Compesaciones&Beneficios"}, {"tipo": "Beneficios", "titulo": "Programa de Referidos", "nota": "Recurrente (semanal)", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Proceso Interno", "titulo": "Reminder Etapa Autoevaluación", "nota": "Sin fecha", "objetivo": "Desarrollo", "canal": ["Mail", "Slack"], "audiencia": ["Global"], "responsable": "HRBP"}, {"tipo": "Info Útil", "titulo": "Guarderia", "nota": "Sin fecha", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Proceso Interno", "titulo": "GPTW 2025: ¡Cada opinión cuenta!", "nota": "Sin fecha", "objetivo": "Cercania Colaboradores", "canal": ["Mail", "Slack"], "audiencia": ["Global"], "responsable": "HRBP"}, {"tipo": "Info Útil", "titulo": "Novedades estructura??", "nota": "A definir (TBD)", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Info Útil", "titulo": "Charla Informativa Ganancias", "nota": "A definir (TBD)", "objetivo": "Informar", "canal": ["Slack"], "audiencia": ["Global"], "responsable": "Compensaciones & Beneficios"}, {"tipo": "Proceso Interno", "titulo": "Team Landing??", "nota": "A definir (TBD)", "objetivo": "Formacion Interna", "canal": ["Mail"], "audiencia": [], "responsable": "HRBP"}, {"tipo": "Capacitaciones", "titulo": "Own The Challenge 2.0", "nota": "A definir (TBD)", "objetivo": "Feedback Formacion Interna", "canal": ["Mail"], "audiencia": [], "responsable": "HRBP"}, {"tipo": "Eventos Internos", "titulo": "Nubiral Plus", "nota": "Sin fecha", "objetivo": "Promover una cultura de reconocimiento", "canal": ["Mail"], "audiencia": [], "responsable": "HRBP"}, {"tipo": "Capacitaciones", "titulo": "AWS GEN IA Bootcamp?", "nota": "A definir (TBD)", "objetivo": "Formacion", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Capacitaciones", "titulo": "Encuesta Satisfacción - AWS GEN IA Bootcamp", "nota": "A definir (TBD)", "objetivo": "Feedback Formacion", "canal": ["Mail"], "audiencia": [], "responsable": ""}, {"tipo": "Efemerides", "titulo": "20 de Julio - Dia del Amigo FLYER A evaluar si hacemos acción", "nota": "A definir (TBD)", "objetivo": "Celebrar", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Eventos Internos", "titulo": "Nubiral Point- Dia del Amigo", "nota": "A definir (TBD)", "objetivo": "Integración", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Beneficios", "titulo": "Beneficios", "nota": "A definir (TBD)", "objetivo": "Informar", "canal": [], "audiencia": [], "responsable": "Compesaciones&Beneficios"}, {"tipo": "Info Útil", "titulo": "Novedades de Negocio", "nota": "Sin fecha", "objetivo": "Informar", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Efemerides", "titulo": "Dia del niño FLYER", "nota": "A definir (TBD)", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Otro", "titulo": "Family Day?", "nota": "A definir (TBD)", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Capacitaciones", "titulo": "Retomamos Workshop -> 1er sesión", "nota": "Sin fecha", "objetivo": "Formación", "canal": ["Slack"], "audiencia": [], "responsable": "HRBP"}, {"tipo": "Proceso Interno", "titulo": "Ranking Los Mejores Lugares para Trabajar™ en América Latina 2026", "nota": "A definir (TBD)", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Eventos Internos", "titulo": "Family Day | dia del maestro", "nota": "A definir (TBD)", "objetivo": "Integración", "canal": [], "audiencia": ["Global"], "responsable": ""}, {"tipo": "Info Útil", "titulo": "Tips Vacaciones", "nota": "Sin fecha", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Auditoria Interna", "titulo": "Pre Auditoria ISO 9001", "nota": "A definir (TBD)", "objetivo": "Reforzar compromiso con calidad", "canal": [], "audiencia": [], "responsable": "HRBP"}, {"tipo": "Eventos Internos", "titulo": "Save the date – Fiesta fin de año", "nota": "A definir (TBD)", "objetivo": "Convovar y motivar", "canal": [], "audiencia": ["Global"], "responsable": "HRBP"}, {"tipo": "Info Útil", "titulo": "Días libres por Festividades", "nota": "Sin fecha", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Proceso Interno", "titulo": "Ranking Los Mejores Lugares para Trabajar™ en el Mundo 2026", "nota": "A definir (TBD)", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Proceso Interno", "titulo": "Taller Nuevos Ev + Feedback Consciente 2.0", "nota": "A definir (TBD)", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Info Útil", "titulo": "Tarjeta de Fin de año para Proveedores / Clientes o Terceros", "nota": "Sin fecha", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Proceso Interno", "titulo": "Push Etapas Evaluacion de Desempeño", "nota": "Sin fecha", "objetivo": "", "canal": ["Slack"], "audiencia": [], "responsable": ""}, {"tipo": "Eventos Internos", "titulo": "Nubiral Point- Cierre de año", "nota": "A definir (TBD)", "objetivo": "Integración", "canal": [], "audiencia": [], "responsable": ""}, {"tipo": "Info Útil", "titulo": "Lanzamiento Evaluación de Desempeño", "nota": "A definir (TBD)", "objetivo": "", "canal": ["Mail", "Slack", "PeopleForce"], "audiencia": [], "responsable": "HRBP"}];
+    window.INITIAL_HISTORICO = [{"md": "01-26", "anio": 2026, "tipo": "Beneficios", "titulo": "Kit Escolar", "objetivo": "Informar", "canal": ["Mail", "PeopleForce"], "audiencia": ["ARG", "COL", "MX", "CH"], "responsable": "Compensaciones & Beneficios"}, {"md": "01-26", "anio": 2026, "tipo": "Info Útil", "titulo": "Reminder hacer uso de los días de descanso", "objetivo": "Informar", "canal": ["Mail", "PeopleForce"], "audiencia": [], "responsable": ""}, {"md": "02-05", "anio": 2025, "tipo": "Info Útil", "titulo": "Acreditación Haberes", "objetivo": "Informar", "canal": ["Mail"], "audiencia": ["Global"], "responsable": "Compensaciones & Beneficios"}, {"md": "02-05", "anio": 2025, "tipo": "Proceso Interno", "titulo": "Cambio de color de marca", "objetivo": "Informar", "canal": ["Mail", "Slack", "PeopleForce"], "audiencia": [], "responsable": ""}, {"md": "02-13", "anio": 2026, "tipo": "Proceso Interno", "titulo": "Lanzamiento Encuesta GPTW", "objetivo": "Cercanía Colaboradores", "canal": ["Mail", "Slack"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "02-18", "anio": 2026, "tipo": "Proceso Interno", "titulo": "GPTW 2025: La encuesta ya empezó", "objetivo": "Cercanía Colaboradores", "canal": ["Mail", "Slack"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "03-05", "anio": 2026, "tipo": "Info Útil", "titulo": "Acreditación Haberes", "objetivo": "Informar", "canal": ["Mail"], "audiencia": ["Global"], "responsable": "Compensaciones & Beneficios"}, {"md": "03-06", "anio": 2026, "tipo": "Efemerides", "titulo": "8 de marzo - Dia de la Mujer", "objetivo": "Informar", "canal": ["General"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "03-06", "anio": 2026, "tipo": "Proceso Interno", "titulo": "GTPW 2025: ¡Quedan pocos días para responder la encuesta GPTW 2025!", "objetivo": "Cercanía Colaboradores", "canal": ["Mail", "Slack"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "03-10", "anio": 2026, "tipo": "Proceso Interno", "titulo": "GPTW 2025: ¡Último día!", "objetivo": "Cercanía Colaboradores", "canal": ["Mail", "Slack"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "03-10", "anio": 2026, "tipo": "Proceso Interno", "titulo": "GPTW 2025: ¡Gracias a toidos por participar!", "objetivo": "Cercanía Colaboradores", "canal": ["Mail", "Slack"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "03-12", "anio": 2026, "tipo": "Proceso Interno", "titulo": "GPTW 2025: ¡Extendemos la fecha de cierre!", "objetivo": "Cercanía Colaboradores", "canal": ["Mail", "Slack"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "03-19", "anio": 2026, "tipo": "Proceso Interno", "titulo": "Resultados GPTW- Certifcacion GPTW", "objetivo": "Informar", "canal": ["Mail", "Slack"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "03-31", "anio": 2026, "tipo": "Info Útil", "titulo": "Reminder: Último día para cargar Ganancias", "objetivo": "Informar", "canal": ["Slack"], "audiencia": ["Global"], "responsable": "Compensaciones & Beneficios"}, {"md": "04-04", "anio": 2026, "tipo": "Info Útil", "titulo": "Acreditación Haberes", "objetivo": "Informar", "canal": ["Mail"], "audiencia": ["Global"], "responsable": "Compensaciones & Beneficios"}, {"md": "04-06", "anio": 2026, "tipo": "Efemerides", "titulo": "Felices Pascuas", "objetivo": "Celebrar", "canal": ["General"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "04-21", "anio": 2026, "tipo": "Proceso Interno", "titulo": "Ranking Mejores Lugares para Trabajar™ en Tecnología 2026", "objetivo": "Celebrar", "canal": ["Mail", "Slack"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "04-30", "anio": 2026, "tipo": "Efemerides", "titulo": "Día del animal, flyer?", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"md": "05-01", "anio": 2026, "tipo": "Efemerides", "titulo": "1 de mayo - Día del trabajo", "objetivo": "Celebrar", "canal": ["General"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "05-05", "anio": 2026, "tipo": "Info Útil", "titulo": "Acreditación Haberes", "objetivo": "Informar", "canal": ["Mail"], "audiencia": ["Global"], "responsable": "Compensaciones & Beneficios"}, {"md": "05-09", "anio": 2026, "tipo": "Info Útil", "titulo": "Actualización Insight Center", "objetivo": "Informar", "canal": ["Mail"], "audiencia": ["Global"], "responsable": "Marketing"}, {"md": "05-15", "anio": 2026, "tipo": "Info Útil", "titulo": "Actualización NubiCV", "objetivo": "Mantener actualizados los nubicv de los perfiles IT", "canal": ["Slack"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "05-19", "anio": 2026, "tipo": "Eventos Internos", "titulo": "Nubiral Point- Aniversario", "objetivo": "Integración", "canal": [], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "05-19", "anio": 2025, "tipo": "Efemerides", "titulo": "Aniversario Nubiral", "objetivo": "Celebrar", "canal": ["Mail", "Slack"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "05-21", "anio": 2025, "tipo": "Proceso Interno", "titulo": "Lanzamiento Wellness Check in 1.1", "objetivo": "Cercanía Colaboradores", "canal": ["Mail", "Slack"], "audiencia": ["Global"], "responsable": "HRBP"}, {"md": "05-21", "anio": 2025, "tipo": "Proceso Interno", "titulo": "Ranking Mejores Lugares para Trabajar™ Empresas que Cuidan 2026", "objetivo": "no quedamos en el ranking", "canal": [], "audiencia": [], "responsable": ""}, {"md": "06-05", "anio": 2026, "tipo": "Info Útil", "titulo": "Acreditación Haberes", "objetivo": "Informar", "canal": ["Mail"], "audiencia": ["Global"], "responsable": "Compensaciones & Beneficios"}, {"md": "06-16", "anio": 2025, "tipo": "Efemerides", "titulo": "Dia del ingeniero flyer", "objetivo": "Celebrar", "canal": [], "audiencia": [], "responsable": ""}, {"md": "06-19", "anio": 2026, "tipo": "Info Útil", "titulo": "Funcionalidades Slack", "objetivo": "Promover comunicacion eficiente", "canal": ["Slack"], "audiencia": [], "responsable": ""}, {"md": "06-21", "anio": 2026, "tipo": "Efemerides", "titulo": "Día del padre", "objetivo": "Celebrar", "canal": ["Slack"], "audiencia": ["ARG"], "responsable": ""}, {"md": "06-25", "anio": 2026, "tipo": "Proceso Interno", "titulo": "Ranking Los Mejores Lugares para Trabajar™ para PyMEs 2026", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"md": "06-28", "anio": 2025, "tipo": "Efemerides", "titulo": "Día del orgullo - Proponer posteo de diversidad e inclusión FLYER", "objetivo": "Celebrar", "canal": [], "audiencia": [], "responsable": ""}, {"md": "07-01", "anio": 2025, "tipo": "Info Útil", "titulo": "Reminder baja de wellhub", "objetivo": "Informar", "canal": ["Mail"], "audiencia": [], "responsable": "Compensaciones & Beneficios"}, {"md": "07-15", "anio": 2025, "tipo": "Estructura", "titulo": "Novedades Compañia", "objetivo": "Informar", "canal": ["Mail", "Slack", "General"], "audiencia": ["Global"], "responsable": ""}, {"md": "07-15", "anio": 2025, "tipo": "Eventos Internos", "titulo": "Nubiral Plus", "objetivo": "Celebrar", "canal": ["Mail"], "audiencia": [], "responsable": "HRBP"}, {"md": "07-23", "anio": 2026, "tipo": "Proceso Interno", "titulo": "Ranking Mejores Lugares para Trabajar™ para Generación Silver 2026+", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"md": "07-25", "anio": 2025, "tipo": "Efemerides", "titulo": "Dia del SysAdmin (último viernes del mes) FLYER", "objetivo": "Celebrar", "canal": [], "audiencia": [], "responsable": ""}, {"md": "09-04", "anio": 2025, "tipo": "Efemerides", "titulo": "04 de septiembre - Día de la secretaría ( flyer | saludo individual | regalo )", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"md": "09-13", "anio": 2025, "tipo": "Efemerides", "titulo": "Día del programador Flyer", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"md": "09-17", "anio": 2025, "tipo": "Proceso Interno", "titulo": "Ranking GPTW: Mejores Lugares para Trabajar: Mujeres.", "objetivo": "", "canal": ["Slack"], "audiencia": [], "responsable": "HRBP"}, {"md": "09-21", "anio": 2025, "tipo": "Efemerides", "titulo": "21 de septiembre - Dia de la primavera comunicar con FLYER (en caso de after). A evaluar si hacemos acción.", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"md": "10-01", "anio": 2025, "tipo": "Info Útil", "titulo": "Días Nubiral nueva vigencia", "objetivo": "Informar", "canal": ["PeopleForce"], "audiencia": ["ARG"], "responsable": "HRBP"}, {"md": "10-19", "anio": 2025, "tipo": "Efemerides", "titulo": "Día de la Madre 2023 FLYER (comunicar en staff arg)", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"md": "10-22", "anio": 2025, "tipo": "Proceso Interno", "titulo": "Ranking Los Mejores Lugares para Trabajar™ para Talento Joven 2026", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"md": "11-14", "anio": 2025, "tipo": "Info Útil", "titulo": "Días libres por Festividades", "objetivo": "Informar", "canal": ["Mail", "Slack"], "audiencia": ["Global"], "responsable": ""}, {"md": "12-24", "anio": 2025, "tipo": "Efemerides", "titulo": "Navidad", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}, {"md": "12-31", "anio": 2025, "tipo": "Efemerides", "titulo": "Año Nuevo", "objetivo": "", "canal": [], "audiencia": [], "responsable": ""}];
+    window.INITIAL_TAXONOMIAS = {"tipos": ["Info Útil", "Proceso Interno", "Efemérides", "Beneficios", "Eventos Internos", "Capacitaciones", "Estructura", "Auditoría Interna", "Ranking / GPTW", "Otro"], "objetivos": ["Informar", "Celebrar", "Cercanía Colaboradores", "Integración", "Promover Crecimiento", "Formación", "Otro"], "canales": ["Mail", "Slack", "PeopleForce", "General"], "paises": ["ARG", "COL", "MX", "CH", "URU", "Global"], "responsables": ["HRBP", "Compensaciones & Beneficios", "Talent Acquisition", "Marketing", "Otro"], "estados": ["Planificado", "En diseño", "Listo", "Publicado"], "aprobados": ["Aprobado", "Observado", "Rechazado"]};
+    window.INITIAL_DATA = [];
+    window.INITIAL_USER = { email: '', isAdmin: false };
+
+    // ══ Shim de google.script.run → fetch a la API (Apps Script) ══
+    (function () {
+      function email() { try { return localStorage.getItem('nubiral_email') || ''; } catch (e) { return ''; } }
+      function runner() {
+        var s = null, f = null;
+        function post(action, payload) {
+          fetch(window.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ action: action, email: email() }, payload || {})) })
+            .then(function (r) { return r.json(); }).then(function (d) { s && s(d); }).catch(function (e) { f && f(e); });
+        }
+        var r = {
+          withSuccessHandler: function (h) { s = h; return r; },
+          withFailureHandler: function (h) { f = h; return r; },
+          addItem: function (item) { post('addItem', { item: item }); return r; },
+          updateItem: function (id, item) { post('updateItem', { id: id, item: item }); return r; },
+          deleteItem: function (id) { post('deleteItem', { id: id }); return r; },
+          enviarAAprobar: function (id, para, asunto, cuerpo) { post('enviarAAprobar', { id: id, para: para, asunto: asunto, cuerpo: cuerpo }); return r; },
+          aprobarComunicado: function (id, decision, comentario) { post('aprobarComunicado', { id: id, decision: decision, comentario: comentario }); return r; },
+          getPendientesAprobar: function () { post('getPendientesAprobar', {}); return r; }
+        };
+        return r;
+      }
+      window.google = { script: {} };
+      Object.defineProperty(window.google.script, 'run', { get: function () { return runner(); } });
+    })();
+  </script>
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    const C = {
+      bg: '#0D0D0D', card: '#161616', card2: '#1F1F1F', border: '#262626',
+      accent: '#DFFF51', text: '#EDEDED', subtle: '#B3B3B3', muted: '#6B6B6B', danger: '#FF5A5F',
+    };
+    const TAX = window.INITIAL_TAXONOMIAS || {};
+    const TIPOS = TAX.tipos || [];
+    const OBJETIVOS = TAX.objetivos || [];
+    const CANALES = TAX.canales || ['Mail', 'Slack', 'PeopleForce', 'General'];
+    const PAISES = TAX.paises || ['ARG', 'COL', 'MX', 'CH', 'URU', 'Global'];
+    const RESPONSABLES = TAX.responsables || [];
+    const ESTADOS = TAX.estados || ['Planificado', 'En diseño', 'Listo', 'Publicado'];
+    const APROBADOS = TAX.aprobados || ['Aprobado', 'Observado', 'Rechazado'];
+    const FERIADOS = window.INITIAL_FERIADOS || [];
+    const TEMPLATES = window.INITIAL_TEMPLATES || [];
+    const BACKLOG = window.INITIAL_BACKLOG || [];
+    const CANAL_COLOR = { 'Mail': '#0A66C2', 'Slack': '#9B6DFF', 'PeopleForce': '#E879F9', 'General': '#8A8F98' };
+    const AMBAS_COLOR = '#22D3EE';
+    function canalColor(canal) {
+      const cs = asArr(canal); const hasM = cs.indexOf('Mail') >= 0, hasS = cs.indexOf('Slack') >= 0;
+      if (hasM && hasS) return AMBAS_COLOR;
+      if (hasS) return CANAL_COLOR.Slack;
+      if (hasM) return CANAL_COLOR.Mail;
+      if (cs.length) return CANAL_COLOR[cs[0]] || '#6B6B6B';
+      return '#6B6B6B';
+    }
+    function canalLabel(canal) {
+      const cs = asArr(canal); const hasM = cs.indexOf('Mail') >= 0, hasS = cs.indexOf('Slack') >= 0;
+      if (hasM && hasS) return 'Mail + Slack';
+      if (hasS) return 'Slack'; if (hasM) return 'Mail';
+      return cs.join(' + ') || '—';
+    }
+    const ESTADO_COLOR = { 'Planificado': C.muted, 'En diseño': '#0A66C2', 'Listo': '#EF9F27', 'Publicado': '#3DDC84' };
+    const APROBADO_COLOR = { 'Aprobado': '#3DDC84', 'Observado': '#EF9F27', 'Rechazado': C.danger };
+    const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const DOW = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+    const INP = { width: '100%', padding: '9px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card2, color: C.text, fontSize: 13, outline: 'none' };
+    const LBL = { display: 'block', fontSize: 10, fontWeight: 800, color: C.muted, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 5 };
+    const CARD = { background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14 };
+
+    function toDS(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function asArr(v) { return Array.isArray(v) ? v : (v ? String(v).split(',').map(s => s.trim()).filter(Boolean) : []); }
+    function getWeeks(year, month) {
+      const first = new Date(year, month, 1);
+      const startDow = (first.getDay() + 6) % 7; // lunes=0
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const cells = [];
+      for (let i = 0; i < startDow; i++) cells.push(null);
+      for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+      while (cells.length % 7 !== 0) cells.push(null);
+      const weeks = [];
+      for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+      return weeks;
+    }
+
+    // ── Multi-selección por chips (canal, audiencia) ──────────────────────────
+    function ChipMulti({ opciones, valor, onChange, disabled }) {
+      const sel = asArr(valor);
+      const toggle = o => { if (disabled) return; onChange(sel.indexOf(o) >= 0 ? sel.filter(x => x !== o) : [...sel, o]); };
+      return (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {opciones.map(o => {
+            const on = sel.indexOf(o) >= 0;
+            return (
+              <button key={o} type="button" disabled={disabled} onClick={() => toggle(o)}
+                style={{ padding: '5px 11px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: disabled ? 'default' : 'pointer',
+                  border: `1px solid ${on ? C.accent : C.border}`, background: on ? C.accent : 'transparent', color: on ? '#0D0D0D' : C.subtle }}>
+                {o}
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // ── Modal de comunicado (crear/editar/replicar) ───────────────────────────
+    function ItemModal({ item, prefillDate, replicarDe, isAdmin, onClose, onSaved, onDeleted, flash }) {
+      const editing = !!(item && item.id);
+      const base = replicarDe || item || {};
+      const [f, setF] = useState(() => Object.assign({
+        fecha: prefillDate || '', titulo: '', tipo: TIPOS[0] || '', objetivo: '', canal: [], audiencia: [],
+        responsable: '', estado: 'Planificado', copy: '', imagen: '', aprobador: '', aprobado: '',
+        comentario_aprobador: '', link_publicado: '',
+      }, base, prefillDate ? { fecha: prefillDate } : {}, replicarDe ? { id: undefined, aprobador: '', aprobado: '', comentario_aprobador: '', estado: 'Planificado' } : {}));
+      const [saving, setSaving] = useState(false);
+      const [aprobarModal, setAprobarModal] = useState(false);
+      const set = (k, v) => setF(p => ({ ...p, [k]: v }));
+      const readOnly = !isAdmin;
+
+      const guardar = () => {
+        if (!f.titulo.trim()) { flash('Ponele un título.'); return; }
+        setSaving(true);
+        const payload = { ...f, canal: asArr(f.canal), audiencia: asArr(f.audiencia) };
+        const handler = r => {
+          setSaving(false);
+          if (r && r.success) { onSaved(editing ? payload : { ...payload, id: r.id }); onClose(); }
+          else flash('Error: ' + ((r && r.error) || 'No se pudo guardar.'));
+        };
+        const runner = google.script.run.withSuccessHandler(handler).withFailureHandler(() => { setSaving(false); flash('Error al guardar.'); });
+        editing ? runner.updateItem(f.id, payload) : runner.addItem(payload);
+      };
+      const borrar = () => {
+        if (!confirm('¿Borrar este comunicado?')) return;
+        google.script.run.withSuccessHandler(r => { if (r && r.success) { onDeleted(f.id); onClose(); } else flash('Error al borrar.'); })
+          .withFailureHandler(() => flash('Error al borrar.')).deleteItem(f.id);
+      };
+
+      const titulo = editing ? 'Editar comunicado' : (replicarDe ? 'Replicar comunicado' : 'Nuevo comunicado');
+
+      return (
+        <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.82)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999, padding: 16 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: C.card, borderRadius: 18, padding: '24px 26px', width: '100%', maxWidth: 560, border: `1px solid ${C.border}`, borderTop: `3px solid ${C.accent}`, maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: 16, fontWeight: 900 }}>{titulo}</div>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: C.muted }}>✕</button>
+            </div>
+
+            {replicarDe && <div style={{ fontSize: 12, color: C.accent, background: 'rgba(223,255,81,.08)', border: `1px solid ${C.accent}55`, borderRadius: 8, padding: '8px 12px' }}>
+              ↻ Partiendo de una comunicación previa{replicarDe.anio ? ` (histórico ${replicarDe.anio})` : ' del radar'}. Ajustá la fecha y lo que necesites, y guardá para crearla como comunicado nuevo.
+            </div>}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div><label style={LBL}>Fecha</label><input type="date" disabled={readOnly} value={f.fecha} onChange={e => set('fecha', e.target.value)} style={INP} /></div>
+              <div><label style={LBL}>Estado</label>
+                <select disabled={readOnly} value={f.estado} onChange={e => set('estado', e.target.value)} style={INP}>
+                  {ESTADOS.map(x => <option key={x} value={x}>{x}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div><label style={LBL}>Acción / Tema</label><input disabled={readOnly} value={f.titulo} onChange={e => set('titulo', e.target.value)} placeholder="Título breve del comunicado" style={INP} /></div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div><label style={LBL}>Tipo de comunicado</label>
+                <select disabled={readOnly} value={f.tipo} onChange={e => set('tipo', e.target.value)} style={INP}>
+                  {TIPOS.map(x => <option key={x} value={x}>{x}</option>)}
+                </select>
+              </div>
+              <div><label style={LBL}>Objetivo</label>
+                <select disabled={readOnly} value={f.objetivo} onChange={e => set('objetivo', e.target.value)} style={INP}>
+                  <option value=""></option>
+                  {OBJETIVOS.map(x => <option key={x} value={x}>{x}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div><label style={LBL}>Canal</label><ChipMulti opciones={CANALES} valor={f.canal} onChange={v => set('canal', v)} disabled={readOnly} />
+              {asArr(f.canal).length > 0 && <div style={{ marginTop: 6, fontSize: 11, fontWeight: 700, color: canalColor(f.canal), background: canalColor(f.canal) + '18', border: `1px solid ${canalColor(f.canal)}55`, borderRadius: 6, padding: '5px 9px' }}>
+                ● En el calendario se va a ver con el color de <b>{canalLabel(f.canal)}</b>
+              </div>}
+            </div>
+            <div><label style={LBL}>Audiencia (país)</label><ChipMulti opciones={PAISES} valor={f.audiencia} onChange={v => set('audiencia', v)} disabled={readOnly} /></div>
+
+            <div><label style={LBL}>Responsable</label>
+              <select disabled={readOnly} value={f.responsable} onChange={e => set('responsable', e.target.value)} style={INP}>
+                <option value=""></option>
+                {RESPONSABLES.map(x => <option key={x} value={x}>{x}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label style={LBL}>Copy</label>
+              {!readOnly && TEMPLATES.length > 0 && <select value="" onChange={e => { const t = TEMPLATES[e.target.value]; if (t) set('copy', t.texto); }}
+                style={{ ...INP, marginBottom: 6, fontSize: 12, color: C.subtle }}>
+                <option value="">↧ Insertar un template previo…</option>
+                {TEMPLATES.map((t, i) => <option key={i} value={i}>[{t.categoria}] {t.titulo}</option>)}
+              </select>}
+              <textarea disabled={readOnly} value={f.copy} onChange={e => set('copy', e.target.value)} rows={5} style={{ ...INP, resize: 'vertical', lineHeight: 1.5 }} />
+            </div>
+            <div><label style={LBL}>Imagen (link)</label><input disabled={readOnly} value={f.imagen} onChange={e => set('imagen', e.target.value)} placeholder="https://..." style={INP} /></div>
+            <div><label style={LBL}>Link publicado (opcional)</label><input disabled={readOnly} value={f.link_publicado} onChange={e => set('link_publicado', e.target.value)} placeholder="https://..." style={INP} /></div>
+
+            <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={LBL}>Aprobación</label>
+              {f.aprobador
+                ? <div style={{ fontSize: 12, color: C.subtle }}>
+                    Enviado a <b>{f.aprobador}</b> —{' '}
+                    {f.aprobado ? <span style={{ color: APROBADO_COLOR[f.aprobado], fontWeight: 800 }}>{f.aprobado}</span> : <span style={{ color: C.muted }}>sin revisar todavía</span>}
+                    {f.comentario_aprobador && <div style={{ marginTop: 4, fontStyle: 'italic' }}>"{f.comentario_aprobador}"</div>}
+                  </div>
+                : <div style={{ fontSize: 12, color: C.muted }}>Todavía no se mandó a aprobar.</div>}
+              {isAdmin && editing && <button onClick={() => setAprobarModal(true)} style={{ alignSelf: 'flex-start', padding: '7px 14px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.accent, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                {f.aprobador ? 'Reenviar a aprobar' : 'Enviar a aprobar'}
+              </button>}
+            </div>
+
+            {isAdmin && <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+              <button onClick={guardar} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: saving ? '#555' : C.accent, color: '#0D0D0D', fontSize: 14, fontWeight: 800, cursor: saving ? 'wait' : 'pointer' }}>{saving ? 'Guardando...' : (replicarDe ? 'Crear comunicado' : 'Guardar')}</button>
+              {editing && <button onClick={borrar} style={{ padding: '12px 16px', borderRadius: 10, border: `1px solid ${C.danger}66`, background: 'transparent', color: C.danger, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Eliminar</button>}
+            </div>}
+          </div>
+          {aprobarModal && <EnviarAprobarModal item={f} onClose={() => setAprobarModal(false)} onSent={email => { set('aprobador', email); set('aprobado', ''); }} flash={flash} />}
+        </div>
+      );
+    }
+
+    function EnviarAprobarModal({ item, onClose, onSent, flash }) {
+      const [para, setPara] = useState(item.aprobador || '');
+      const [asunto, setAsunto] = useState(`Comunicado interno · "${item.titulo}" · pendiente de aprobación`);
+      const [sending, setSending] = useState(false);
+      const enviar = () => {
+        if (!para.trim()) { flash('Falta el mail de quien tiene que aprobar.'); return; }
+        setSending(true);
+        google.script.run.withSuccessHandler(r => {
+          setSending(false);
+          if (r && r.success) { flash('Comunicado enviado a aprobar.'); onSent(para.trim()); onClose(); }
+          else flash('Error: ' + ((r && r.error) || 'No se pudo enviar.'));
+        }).withFailureHandler(() => { setSending(false); flash('Error al enviar.'); })
+          .enviarAAprobar(item.id, para.trim(), asunto, 'Tenés un comunicado pendiente de aprobar ("' + item.titulo + '"). Entrá a {link} (pestaña "Mis aprobaciones") para revisarlo.');
+      };
+      return (
+        <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 16 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: C.card2, borderRadius: 14, padding: 20, width: '100%', maxWidth: 420, border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontWeight: 900, fontSize: 14 }}>Enviar a aprobar</div>
+            <div><label style={LBL}>Mail de quien aprueba</label><input value={para} onChange={e => setPara(e.target.value)} placeholder="nombre@nubiral.com" style={INP} /></div>
+            <div><label style={LBL}>Asunto</label><input value={asunto} onChange={e => setAsunto(e.target.value)} style={INP} /></div>
+            <button onClick={enviar} disabled={sending} style={{ marginTop: 4, padding: 11, borderRadius: 9, border: 'none', background: sending ? '#555' : C.accent, color: '#0D0D0D', fontSize: 13, fontWeight: 800, cursor: sending ? 'wait' : 'pointer' }}>{sending ? 'Enviando...' : 'Enviar'}</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Calendario (con capa histórica + feriados) ────────────────────────────
+    function Calendario({ items, historico, isAdmin, onOpen, onReplicar, flash }) {
+      const hoy = new Date();
+      const [year, setYear] = useState(hoy.getFullYear());
+      const [month, setMonth] = useState(hoy.getMonth());
+      const [verHist, setVerHist] = useState(true);
+      const weeks = useMemo(() => getWeeks(year, month), [year, month]);
+      const byDate = useMemo(() => {
+        const m = {};
+        items.forEach(it => { (m[it.fecha] = m[it.fecha] || []).push(it); });
+        return m;
+      }, [items]);
+      const histByMd = useMemo(() => {
+        const m = {};
+        (historico || []).forEach(h => { if (h.md) (m[h.md] = m[h.md] || []).push(h); });
+        return m;
+      }, [historico]);
+      const ferByMd = useMemo(() => {
+        const m = {};
+        FERIADOS.forEach(f => { if (f.md) (m[f.md] = m[f.md] || []).push(f); });
+        return m;
+      }, []);
+      const yaHecho = useMemo(() => {
+        const s = {};
+        items.forEach(it => { if (it.fecha && it.fecha.length >= 10) s[it.fecha.slice(5) + '|' + (it.titulo || '').toLowerCase().trim()] = true; });
+        return s;
+      }, [items]);
+      const cambiarMes = delta => {
+        let m = month + delta, y = year;
+        if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
+        setMonth(m); setYear(y);
+      };
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button onClick={() => cambiarMes(-1)} style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, cursor: 'pointer' }}>‹</button>
+            <div style={{ fontWeight: 800, fontSize: 15 }}>{MONTH_NAMES[month]} {year}</div>
+            <button onClick={() => cambiarMes(1)} style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, cursor: 'pointer' }}>›</button>
+            <label style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: C.subtle, cursor: 'pointer', userSelect: 'none' }}>
+              <input type="checkbox" checked={verHist} onChange={e => setVerHist(e.target.checked)} />
+              Mostrar histórico (año pasado)
+            </label>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6 }}>
+            {DOW.map(d => <div key={d} style={{ fontSize: 10, fontWeight: 800, color: C.muted, textAlign: 'center', textTransform: 'uppercase' }}>{d}</div>)}
+            {weeks.map((week, wi) => week.map((day, di) => {
+              if (!day) return <div key={wi + '-' + di} />;
+              const ds = toDS(day);
+              const md = ds.slice(5);
+              const list = byDate[ds] || [];
+              const hist = verHist ? (histByMd[md] || []) : [];
+              const fers = ferByMd[md] || [];
+              const isToday = ds === toDS(hoy);
+              return (
+                <div key={ds} onClick={() => isAdmin && onOpen(null, ds)}
+                  style={{ height: 126, background: C.card, border: `1px solid ${isToday ? C.accent : C.border}`, borderRadius: 8, padding: 6, cursor: isAdmin ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', gap: 3, overflow: 'hidden' }}>
+                  <div style={{ fontSize: 10, color: isToday ? C.accent : C.muted, fontWeight: 800 }}>{day.getDate()}</div>
+                  {fers.map((fe, fi) => (
+                    <div key={'f' + fi} title={fe.nombre}
+                      style={{ fontSize: 8.5, fontWeight: 800, color: '#EF9F27', background: 'rgba(239,159,39,.12)', borderLeft: '2px solid #EF9F27', borderRadius: 3, padding: '1px 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      🏳 {(fe.paises || []).join('/') || '—'} · {fe.nombre}
+                    </div>
+                  ))}
+                  {list.slice(0, 3).map(it => {
+                    const cc = canalColor(it.canal);
+                    return (
+                    <div key={it.id} onClick={e => { e.stopPropagation(); onOpen(it); }}
+                      title={(it.titulo || '') + ' · ' + canalLabel(it.canal) + ' · ' + it.estado}
+                      style={{ fontSize: 10, fontWeight: 700, color: cc, background: cc + '22', borderRadius: 4, borderLeft: `3px solid ${ESTADO_COLOR[it.estado] || C.muted}`, padding: '2px 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {it.titulo || '(sin título)'}
+                    </div>
+                  ); })}
+                  {list.length > 3 && <div style={{ fontSize: 9, color: C.muted }}>+{list.length - 3} más</div>}
+                  {hist.slice(0, 2).map((h, hi) => {
+                    const hecho = yaHecho[md + '|' + (h.titulo || '').toLowerCase().trim()];
+                    return (
+                      <div key={'h' + hi} title={hecho ? 'Ya replicado este año' : ('Histórico ' + (h.anio || '') + ' · click para replicar')}
+                        onClick={e => { e.stopPropagation(); if (isAdmin && !hecho) onReplicar(h, ds); }}
+                        style={{ fontSize: 9, fontWeight: 700, color: hecho ? '#3DDC84' : C.subtle, background: 'transparent',
+                          border: `1px dashed ${hecho ? '#3DDC8455' : C.border}`, borderRadius: 4, padding: '2px 5px', opacity: hecho ? .55 : .8,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: (isAdmin && !hecho) ? 'pointer' : 'default' }}>
+                        {hecho ? '✓ ' : '↻ '}{h.titulo || '(sin título)'}
+                      </div>
+                    );
+                  })}
+                  {hist.length > 2 && <div style={{ fontSize: 9, color: C.muted }}>+{hist.length - 2} hist.</div>}
+                </div>
+              );
+            }))}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 10, color: C.muted, marginTop: 4, borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              <b style={{ color: C.subtle }}>Color por canal:</b>
+              <span style={{ color: CANAL_COLOR.Mail }}>■ Mail</span>
+              <span style={{ color: CANAL_COLOR.Slack }}>■ Slack</span>
+              <span style={{ color: AMBAS_COLOR }}>■ Mail + Slack</span>
+              <span style={{ color: CANAL_COLOR.PeopleForce }}>■ PeopleForce</span>
+              <span style={{ color: CANAL_COLOR.General }}>■ General</span>
+            </div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              <b style={{ color: C.subtle }}>Estado (borde izq.):</b>
+              {ESTADOS.map(e => <span key={e} style={{ color: ESTADO_COLOR[e], fontWeight: 700 }}>▏{e}</span>)}
+              <span style={{ border: `1px dashed ${C.border}`, borderRadius: 4, padding: '1px 6px' }}>↻ histórico</span>
+              <span style={{ color: '#EF9F27' }}>🏳 feriado</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Métricas: tortas por Tipo, Canal, Objetivo y Audiencia ────────────────
+    function Pie({ title, rows }) {
+      const ref = useRef(null); const inst = useRef(null);
+      const colors = ['#DFFF51', '#0A66C2', '#EF9F27', '#3DDC84', '#FF5A5F', '#8a8aff', '#B3B3B3', '#e879f9', '#22d3ee', '#f97316'];
+      useEffect(() => {
+        if (!ref.current || typeof Chart === 'undefined') return;
+        if (inst.current) { inst.current.destroy(); inst.current = null; }
+        inst.current = new Chart(ref.current, {
+          type: 'pie',
+          data: { labels: rows.map(r => r.label), datasets: [{ data: rows.map(r => r.n), backgroundColor: rows.map((_, i) => colors[i % colors.length]), borderColor: '#0D0D0D', borderWidth: 2 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: C.subtle, boxWidth: 12, padding: 8 } } } },
+        });
+        return () => { if (inst.current) { inst.current.destroy(); inst.current = null; } };
+      }, [JSON.stringify(rows)]);
+      return (
+        <div style={CARD}>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.05em', textTransform: 'uppercase', color: C.muted, marginBottom: 8 }}>{title}</div>
+          {rows.length === 0 ? <div style={{ fontSize: 12, color: C.muted, padding: '30px 0', textAlign: 'center' }}>Sin datos</div> : <div style={{ height: 220 }}><canvas ref={ref} /></div>}
+        </div>
+      );
+    }
+    function Metricas({ items }) {
+      const countBy = (field, vals) => vals.map(v => ({ label: v, n: items.filter(i => i[field] === v).length })).filter(x => x.n > 0);
+      const countMulti = (field, vals) => vals.map(v => ({ label: v, n: items.filter(i => asArr(i[field]).indexOf(v) >= 0).length })).filter(x => x.n > 0);
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <Pie title="Por tipo de comunicado" rows={countBy('tipo', TIPOS)} />
+            <Pie title="Por canal" rows={countMulti('canal', CANALES)} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <Pie title="Por objetivo" rows={countBy('objetivo', OBJETIVOS)} />
+            <Pie title="Por audiencia (país)" rows={countMulti('audiencia', PAISES)} />
+          </div>
+        </div>
+      );
+    }
+
+    // ── Mis aprobaciones ──────────────────────────────────────────────────────
+    function AprobarRow({ item, onDone, flash }) {
+      const [comentario, setComentario] = useState('');
+      const [sending, setSending] = useState(false);
+      const decidir = decision => {
+        setSending(true);
+        google.script.run.withSuccessHandler(r => {
+          setSending(false);
+          if (r && r.success) { flash('Listo, quedó como "' + decision + '".'); onDone(item.id, decision, comentario); }
+          else flash('Error: ' + ((r && r.error) || 'No se pudo guardar.'));
+        }).withFailureHandler(() => { setSending(false); flash('Error al guardar.'); })
+          .aprobarComunicado(item.id, decision, comentario);
+      };
+      const meta = [item.fecha, item.tipo, asArr(item.canal).join('/'), asArr(item.audiencia).join('/')].filter(Boolean).join(' · ');
+      return (
+        <div style={{ ...CARD, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 13 }}>{item.titulo || '(sin título)'}</div>
+              <div style={{ fontSize: 11, color: C.muted }}>{meta}</div>
+            </div>
+            {item.aprobado && <span style={{ fontSize: 10, fontWeight: 800, color: APROBADO_COLOR[item.aprobado], background: APROBADO_COLOR[item.aprobado] + '22', padding: '3px 9px', borderRadius: 10, alignSelf: 'flex-start' }}>{item.aprobado}</span>}
+          </div>
+          {item.copy && <div style={{ fontSize: 12, color: C.subtle, whiteSpace: 'pre-wrap' }}>{item.copy}</div>}
+          {!item.aprobado && <>
+            <textarea value={comentario} onChange={e => setComentario(e.target.value)} placeholder="Comentario (opcional)" rows={2} style={{ ...INP, resize: 'vertical' }} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button disabled={sending} onClick={() => decidir('Aprobado')} style={{ flex: 1, padding: 9, borderRadius: 8, border: 'none', background: APROBADO_COLOR.Aprobado, color: '#000', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>Aprobar</button>
+              <button disabled={sending} onClick={() => decidir('Observado')} style={{ flex: 1, padding: 9, borderRadius: 8, border: 'none', background: APROBADO_COLOR.Observado, color: '#000', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>Observar</button>
+              <button disabled={sending} onClick={() => decidir('Rechazado')} style={{ flex: 1, padding: 9, borderRadius: 8, border: 'none', background: APROBADO_COLOR.Rechazado, color: '#fff', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>Rechazar</button>
+            </div>
+          </>}
+        </div>
+      );
+    }
+    function MisAprobaciones({ email, flash }) {
+      const [items, setItems] = useState(null);
+      const cargar = () => {
+        google.script.run.withSuccessHandler(setItems).withFailureHandler(() => setItems([])).getPendientesAprobar();
+      };
+      useEffect(cargar, []);
+      const onDone = (id, decision, comentario) => setItems(p => p.map(x => x.id === id ? { ...x, aprobado: decision, comentario_aprobador: comentario } : x));
+      if (items === null) return <div style={{ color: C.muted, fontSize: 12 }}>Cargando...</div>;
+      const pendientes = items.filter(x => !x.aprobado);
+      const resueltos = items.filter(x => x.aprobado);
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 640 }}>
+          {!items.length && <div style={{ color: C.muted, fontSize: 12 }}>No tenés comunicados asignados ({email}).</div>}
+          {pendientes.map(it => <AprobarRow key={it.id} item={it} onDone={onDone} flash={flash} />)}
+          {resueltos.length > 0 && <>
+            <div style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: 'uppercase', marginTop: 8 }}>Ya revisados</div>
+            {resueltos.map(it => <AprobarRow key={it.id} item={it} onDone={onDone} flash={flash} />)}
+          </>}
+        </div>
+      );
+    }
+
+    // ── Biblioteca de templates (agrupada y legible) ─────────────────────────
+    function TemplateCard({ t }) {
+      const [open, setOpen] = useState(false);
+      const largo = (t.texto || '').length > 320;
+      const copiar = () => { try { navigator.clipboard.writeText(t.texto); } catch (e) {} };
+      return (
+        <div style={{ ...CARD, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.text, lineHeight: 1.3 }}>{t.titulo}</div>
+            <button onClick={copiar} style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: C.accent, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '4px 10px', cursor: 'pointer' }}>Copiar</button>
+          </div>
+          <div style={{ fontSize: 12.5, color: C.subtle, whiteSpace: 'pre-wrap', lineHeight: 1.6, maxHeight: open ? 'none' : 150, overflow: 'hidden', position: 'relative' }}>
+            {t.texto}
+            {largo && !open && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, background: 'linear-gradient(transparent, ' + C.card + ')' }} />}
+          </div>
+          {largo && <button onClick={() => setOpen(o => !o)} style={{ alignSelf: 'flex-start', fontSize: 11, fontWeight: 700, color: C.muted, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>{open ? '▲ Ver menos' : '▼ Ver texto completo'}</button>}
+        </div>
+      );
+    }
+    function Biblioteca() {
+      const [q, setQ] = useState('');
+      const [cat, setCat] = useState('');
+      const cats = useMemo(() => Array.from(new Set(TEMPLATES.map(t => t.categoria))).sort(), []);
+      const filtrados = TEMPLATES.filter(t =>
+        (!cat || t.categoria === cat) &&
+        (!q || (t.titulo + ' ' + t.texto + ' ' + t.categoria).toLowerCase().indexOf(q.toLowerCase()) >= 0));
+      const grupos = useMemo(() => {
+        const g = {};
+        filtrados.forEach(t => { (g[t.categoria] = g[t.categoria] || []).push(t); });
+        return Object.keys(g).sort().map(k => [k, g[k]]);
+      }, [q, cat]);
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar en los templates…" style={{ ...INP, maxWidth: 320 }} />
+            <select value={cat} onChange={e => setCat(e.target.value)} style={{ ...INP, maxWidth: 240 }}>
+              <option value="">Todas las categorías</option>
+              {cats.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <span style={{ fontSize: 11, color: C.muted }}>{filtrados.length} template(s)</span>
+          </div>
+          {grupos.map(([categoria, lista]) => (
+            <div key={categoria} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: C.accent, textTransform: 'uppercase', letterSpacing: '.05em', borderBottom: `1px solid ${C.border}`, paddingBottom: 6 }}>
+                {categoria} <span style={{ color: C.muted, fontWeight: 700 }}>· {lista.length}</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+                {lista.map((t, i) => <TemplateCard key={i} t={t} />)}
+              </div>
+            </div>
+          ))}
+          {!filtrados.length && <div style={{ fontSize: 12, color: C.muted }}>No hay templates que coincidan.</div>}
+        </div>
+      );
+    }
+
+    // ── En radar: comunicados sin fecha / TBD ─────────────────────────────────
+    function RadarPanel({ items, isAdmin, onOpen, onCargar }) {
+      const [open, setOpen] = useState(true);
+      const sinFecha = items.filter(it => !it.fecha);
+      const total = sinFecha.length + BACKLOG.length;
+      return (
+        <div style={{ ...CARD, marginTop: 4 }}>
+          <div onClick={() => setOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <span style={{ fontSize: 13, fontWeight: 900 }}>📌 En radar · sin fecha</span>
+            <span style={{ fontSize: 11, color: C.muted }}>{total} para agendar</span>
+            <span style={{ marginLeft: 'auto', color: C.muted, fontSize: 12 }}>{open ? '▲' : '▼'}</span>
+          </div>
+          {open && <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12 }}>
+            {sinFecha.length > 0 && <div>
+              <div style={{ fontSize: 10, fontWeight: 800, color: C.subtle, textTransform: 'uppercase', marginBottom: 6 }}>Cargados sin fecha</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {sinFecha.map(it => {
+                  const cc = canalColor(it.canal);
+                  return <button key={it.id} onClick={() => isAdmin && onOpen(it)} style={{ textAlign: 'left', fontSize: 11, fontWeight: 700, color: cc, background: cc + '1A', border: `1px solid ${cc}44`, borderLeft: `3px solid ${ESTADO_COLOR[it.estado] || C.muted}`, borderRadius: 7, padding: '6px 10px', cursor: isAdmin ? 'pointer' : 'default' }}>
+                    {it.titulo || '(sin título)'} <span style={{ color: C.muted, fontWeight: 500 }}>· {it.tipo}</span>
+                  </button>;
+                })}
+              </div>
+            </div>}
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 800, color: C.subtle, textTransform: 'uppercase', marginBottom: 6 }}>Del plan (recurrentes / TBD) — {BACKLOG.length}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {BACKLOG.map((b, i) => {
+                  const cc = canalColor(b.canal);
+                  return <button key={i} title={isAdmin ? 'Click para agendar' : ''} onClick={() => isAdmin && onCargar(b, '')} style={{ textAlign: 'left', fontSize: 11, fontWeight: 700, color: C.subtle, background: 'transparent', border: `1px dashed ${C.border}`, borderRadius: 7, padding: '6px 10px', cursor: isAdmin ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 260 }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 240 }}>{b.titulo}</span>
+                    <span style={{ fontSize: 9, fontWeight: 600, color: C.muted }}>{b.tipo} · {b.nota}{asArr(b.canal).length ? ' · ' : ''}<span style={{ color: cc }}>{canalLabel(b.canal) !== '—' ? canalLabel(b.canal) : ''}</span></span>
+                  </button>;
+                })}
+              </div>
+            </div>
+          </div>}
+        </div>
+      );
+    }
+
+    // ── App ───────────────────────────────────────────────────────────────────
+    function App() {
+      const user = window.INITIAL_USER;
+      const [items, setItems] = useState(window.INITIAL_DATA || []);
+      const historico = window.INITIAL_HISTORICO || [];
+      const [view, setView] = useState('calendar');
+      const [modal, setModal] = useState(undefined);
+      const [toast, setToast] = useState('');
+      const flash = msg => { setToast(msg); setTimeout(() => setToast(''), 3500); };
+
+      const onOpen = (item, fecha) => setModal({ item, fecha });
+      const onReplicar = (hist, fecha) => setModal({ replicarDe: hist, fecha });
+      const onSaved = it => setItems(p => p.some(x => x.id === it.id) ? p.map(x => x.id === it.id ? it : x) : [it, ...p]);
+      const onDeleted = id => setItems(p => p.filter(x => x.id !== id));
+
+      const tabs = [['calendar', 'Calendario'], ['metrics', 'Métricas'], ['templates', 'Templates'], ['aprobar', 'Mis aprobaciones']];
+
+      return (
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div><div style={{ fontSize: 15, fontWeight: 900, color: C.accent }}>Nubiral</div><div style={{ fontSize: 10, color: C.muted }}>Comunicaciones Internas</div></div>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {tabs.map(([k, label]) => (
+                <button key={k} onClick={() => setView(k)} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: view === k ? C.accent : C.card2, color: view === k ? '#000' : C.muted, fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>{label}</button>
+              ))}
+            </div>
+          </div>
+
+          {!user.isAdmin && <div style={{ fontSize: 11, color: C.muted, background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 12px' }}>
+            Estás viendo el calendario en modo lectura. Si tenés un comunicado para aprobar, aparece en "Mis aprobaciones".
+          </div>}
+
+          {view === 'calendar' && <><Calendario items={items} historico={historico} isAdmin={user.isAdmin} onOpen={onOpen} onReplicar={onReplicar} flash={flash} /><RadarPanel items={items} isAdmin={user.isAdmin} onOpen={onOpen} onCargar={onReplicar} /></>}
+          {view === 'metrics' && <Metricas items={items} />}
+          {view === 'templates' && <Biblioteca />}
+          {view === 'aprobar' && <MisAprobaciones email={user.email} flash={flash} />}
+
+          {modal !== undefined && <ItemModal item={modal.item} prefillDate={modal.fecha} replicarDe={modal.replicarDe} isAdmin={user.isAdmin}
+            onClose={() => setModal(undefined)} onSaved={onSaved} onDeleted={onDeleted} flash={flash} />}
+
+          {toast && <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 2000, background: '#000', border: `1px solid ${C.border}`, color: C.text, padding: '10px 18px', borderRadius: 10, fontSize: 13, fontWeight: 600 }}>{toast}</div>}
+        </div>
+      );
+    }
+
+    // ── Login por mail + bootstrap desde la API (Vercel) ──────────────────────
+    function LoginForm({ onLogin }) {
+      const [em, setEm] = useState('');
+      const entrar = () => { const v = em.trim().toLowerCase(); if (v) onLogin(v); };
+      return (
+        <div style={{ maxWidth: 400, margin: '90px auto', ...CARD, display: 'flex', flexDirection: 'column', gap: 12, borderTop: `3px solid ${C.accent}` }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: C.accent }}>Nubiral · Comunicaciones Internas</div>
+          <div style={{ fontSize: 12, color: C.subtle }}>Ingresá tu mail de Nubiral para entrar.</div>
+          <input value={em} onChange={e => setEm(e.target.value)} onKeyDown={e => e.key === 'Enter' && entrar()} placeholder="tu.mail@nubiral.com" style={INP} />
+          <button onClick={entrar} style={{ padding: 11, borderRadius: 9, border: 'none', background: C.accent, color: '#0D0D0D', fontWeight: 800, cursor: 'pointer' }}>Entrar</button>
+          <div style={{ fontSize: 10, color: C.muted }}>Sólo quienes estén en la lista de admins pueden crear/editar. El resto ve el calendario y sus aprobaciones.</div>
+        </div>
+      );
+    }
+    function Pantalla({ msg, sub }) {
+      return <div style={{ maxWidth: 440, margin: '90px auto', textAlign: 'center' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: C.subtle }}>{msg}</div>
+        {sub && <div style={{ fontSize: 12, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>{sub}</div>}
+      </div>;
+    }
+    function Root() {
+      const [email, setEmail] = useState(() => { try { return localStorage.getItem('nubiral_email') || ''; } catch (e) { return ''; } });
+      const [state, setState] = useState('init'); // init | loading | ready | error
+      const [errMsg, setErrMsg] = useState('');
+      const boot = (em) => {
+        setState('loading');
+        fetch(window.API_URL + '?action=bootstrap&email=' + encodeURIComponent(em))
+          .then(r => r.json())
+          .then(d => { window.INITIAL_DATA = (d && d.comunicados) || []; window.INITIAL_USER = (d && d.user) || { email: em, isAdmin: false }; setState('ready'); })
+          .catch(() => { setErrMsg('No pude conectar con la base de datos. Revisá que window.API_URL (arriba del index.html) tenga la URL /exec de tu Apps Script publicado como "Cualquier usuario".'); setState('error'); });
+      };
+      useEffect(() => { if (email) boot(email); }, []);
+      const login = (em) => { try { localStorage.setItem('nubiral_email', em); } catch (e) {} setEmail(em); boot(em); };
+      const salir = () => { try { localStorage.removeItem('nubiral_email'); } catch (e) {} setEmail(''); setState('init'); };
+      if (!email) return <LoginForm onLogin={login} />;
+      if (state === 'loading' || state === 'init') return <Pantalla msg="Cargando…" />;
+      if (state === 'error') return <Pantalla msg="Error de conexión" sub={errMsg} />;
+      window.__logout = salir;
+      return <App />;
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
+  </script>
+</body>
+</html>
