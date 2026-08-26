@@ -662,7 +662,7 @@
       const [errMsg, setErrMsg] = useState('');
       const boot = (em) => {
         setState('loading');
-        fetch(window.API_URL + '?action=bootstrap&email=' + encodeURIComponent(em)), { credentials: 'omit' }
+        fetch(window.API_URL + '?action=bootstrap&email=' + encodeURIComponent(em), { credentials: 'omit' })
           .then(r => r.json())
           .then(d => { window.INITIAL_DATA = (d && d.comunicados) || []; window.INITIAL_USER = (d && d.user) || { email: em, isAdmin: false }; setState('ready'); })
           .catch(() => { setErrMsg('No pude conectar con la base de datos. Revisá que window.API_URL (arriba del index.html) tenga la URL /exec de tu Apps Script publicado como "Cualquier usuario".'); setState('error'); });
