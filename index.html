@@ -328,7 +328,8 @@
               Mostrar histórico (año pasado)
             </label>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6 }}>
+          <div style={{ overflowX: 'auto', margin: '0 -2px', paddingBottom: 4 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(94px, 1fr))', gap: 6, minWidth: 680 }}>
             {DOW.map(d => <div key={d} style={{ fontSize: 10, fontWeight: 800, color: C.muted, textAlign: 'center', textTransform: 'uppercase' }}>{d}</div>)}
             {weeks.map((week, wi) => week.map((day, di) => {
               if (!day) return <div key={wi + '-' + di} />;
@@ -374,6 +375,7 @@
                 </div>
               );
             }))}
+          </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 10, color: C.muted, marginTop: 4, borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -421,11 +423,11 @@
       const countMulti = (field, vals) => vals.map(v => ({ label: v, n: items.filter(i => asArr(i[field]).indexOf(v) >= 0).length })).filter(x => x.n > 0);
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 14 }}>
             <Pie title="Por tipo de comunicado" rows={countBy('tipo', TIPOS)} />
             <Pie title="Por canal" rows={countMulti('canal', CANALES)} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 14 }}>
             <Pie title="Por objetivo" rows={countBy('objetivo', OBJETIVOS)} />
             <Pie title="Por audiencia (país)" rows={countMulti('audiencia', PAISES)} />
           </div>
@@ -587,6 +589,63 @@
       );
     }
 
+    // ── Vista de lista + búsqueda + filtros + exportar ────────────────────────
+    function ListaView({ items, isAdmin, onOpen }) {
+      const [q, setQ] = useState('');
+      const [ftipo, setFtipo] = useState('');
+      const [fcanal, setFcanal] = useState('');
+      const [festado, setFestado] = useState('');
+      const filtered = items.filter(it => {
+        if (ftipo && it.tipo !== ftipo) return false;
+        if (fcanal && asArr(it.canal).indexOf(fcanal) < 0) return false;
+        if (festado && it.estado !== festado) return false;
+        if (q) { const hay = (it.titulo + ' ' + it.tipo + ' ' + it.objetivo + ' ' + it.copy + ' ' + it.responsable + ' ' + asArr(it.canal).join(' ') + ' ' + asArr(it.audiencia).join(' ')).toLowerCase(); if (hay.indexOf(q.toLowerCase()) < 0) return false; }
+        return true;
+      }).sort((a, b) => (a.fecha || '9999').localeCompare(b.fecha || '9999'));
+      const exportarCSV = () => {
+        const cols = ['fecha', 'titulo', 'tipo', 'objetivo', 'canal', 'audiencia', 'responsable', 'estado', 'aprobador', 'aprobado', 'copy', 'link_publicado'];
+        const esc = v => '"' + String(v == null ? '' : (Array.isArray(v) ? v.join('; ') : v)).replace(/"/g, '""') + '"';
+        const rows = [cols.join(',')].concat(filtered.map(it => cols.map(c => esc(it[c])).join(',')));
+        const csv = '﻿' + rows.join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = 'comunicaciones_nubiral.csv'; document.body.appendChild(a); a.click(); a.remove();
+      };
+      const SEL = { ...INP, maxWidth: 170, fontSize: 12 };
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar…" style={{ ...INP, maxWidth: 240, fontSize: 12 }} />
+            <select value={ftipo} onChange={e => setFtipo(e.target.value)} style={SEL}><option value="">Todos los tipos</option>{TIPOS.map(t => <option key={t} value={t}>{t}</option>)}</select>
+            <select value={fcanal} onChange={e => setFcanal(e.target.value)} style={SEL}><option value="">Todos los canales</option>{CANALES.map(c => <option key={c} value={c}>{c}</option>)}</select>
+            <select value={festado} onChange={e => setFestado(e.target.value)} style={SEL}><option value="">Todos los estados</option>{ESTADOS.map(s => <option key={s} value={s}>{s}</option>)}</select>
+            <span style={{ fontSize: 11, color: C.muted }}>{filtered.length}</span>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+              <button onClick={exportarCSV} style={{ padding: '7px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.accent, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>⭳ Excel (CSV)</button>
+              <button onClick={() => window.print()} style={{ padding: '7px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.subtle, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🖨 Imprimir / PDF</button>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {filtered.length === 0 && <div style={{ fontSize: 12, color: C.muted, padding: '20px 0', textAlign: 'center' }}>No hay comunicados que coincidan.</div>}
+            {filtered.map(it => {
+              const cc = canalColor(it.canal);
+              return (
+                <div key={it.id} onClick={() => onOpen(it)} style={{ ...CARD, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', borderLeft: `3px solid ${ESTADO_COLOR[it.estado] || C.muted}` }}>
+                  <div style={{ width: 78, flexShrink: 0, fontSize: 11, fontWeight: 700, color: it.fecha ? C.subtle : C.muted }}>{it.fecha || 'sin fecha'}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.titulo || '(sin título)'}</div>
+                    <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{[it.tipo, it.objetivo, asArr(it.audiencia).join('/')].filter(Boolean).join(' · ')}</div>
+                  </div>
+                  <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: cc, background: cc + '22', borderRadius: 6, padding: '3px 8px' }}>{canalLabel(it.canal)}</span>
+                  <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: ESTADO_COLOR[it.estado] || C.muted }}>{it.estado}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     // ── App ───────────────────────────────────────────────────────────────────
     function App() {
       const user = window.INITIAL_USER;
@@ -595,18 +654,26 @@
       const [view, setView] = useState('calendar');
       const [modal, setModal] = useState(undefined);
       const [toast, setToast] = useState('');
+      const [refreshing, setRefreshing] = useState(false);
       const flash = msg => { setToast(msg); setTimeout(() => setToast(''), 3500); };
 
       const onOpen = (item, fecha) => setModal({ item, fecha });
       const onReplicar = (hist, fecha) => setModal({ replicarDe: hist, fecha });
       const onSaved = it => setItems(p => p.some(x => x.id === it.id) ? p.map(x => x.id === it.id ? it : x) : [it, ...p]);
       const onDeleted = id => setItems(p => p.filter(x => x.id !== id));
+      const refrescar = () => {
+        setRefreshing(true);
+        fetch(window.API_URL + '?action=bootstrap&email=' + encodeURIComponent(user.email), { credentials: 'omit' })
+          .then(r => r.json()).then(d => { setItems((d && d.comunicados) || []); flash('Actualizado.'); })
+          .catch(() => flash('No se pudo actualizar.'))
+          .finally(() => setRefreshing(false));
+      };
 
-      const tabs = [['calendar', 'Calendario'], ['metrics', 'Métricas'], ['templates', 'Templates'], ['aprobar', 'Mis aprobaciones']];
+      const tabs = [['calendar', 'Calendario'], ['lista', 'Lista'], ['metrics', 'Métricas'], ['templates', 'Templates'], ['aprobar', 'Mis aprobaciones']];
 
       return (
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
             <div><div style={{ fontSize: 15, fontWeight: 900, color: C.accent }}>Nubiral</div><div style={{ fontSize: 10, color: C.muted }}>Comunicaciones Internas</div></div>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {tabs.map(([k, label]) => (
@@ -615,6 +682,7 @@
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 6 }}>
               <span title={user.email} style={{ fontSize: 10, color: user.isAdmin ? C.accent : C.muted, maxWidth: 170, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700 }}>{user.email || '—'}{user.isAdmin ? ' · admin' : ' · lectura'}</span>
+              <button onClick={refrescar} disabled={refreshing} title="Refrescar" style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: refreshing ? C.muted : C.accent, fontSize: 13, fontWeight: 700, cursor: refreshing ? 'wait' : 'pointer' }}>{refreshing ? '…' : '⟳'}</button>
               <button onClick={() => { if (window.__logout) window.__logout(); }} style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.subtle, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Salir</button>
             </div>
           </div>
@@ -624,6 +692,7 @@
           </div>}
 
           {view === 'calendar' && <><Calendario items={items} historico={historico} isAdmin={user.isAdmin} onOpen={onOpen} onReplicar={onReplicar} flash={flash} /><RadarPanel items={items} isAdmin={user.isAdmin} onOpen={onOpen} onCargar={onReplicar} /></>}
+          {view === 'lista' && <ListaView items={items} isAdmin={user.isAdmin} onOpen={onOpen} />}
           {view === 'metrics' && <Metricas items={items} />}
           {view === 'templates' && <Biblioteca />}
           {view === 'aprobar' && <MisAprobaciones email={user.email} flash={flash} />}
@@ -650,29 +719,38 @@
         </div>
       );
     }
-    function Pantalla({ msg, sub }) {
+    function Pantalla({ msg, sub, onRetry }) {
       return <div style={{ maxWidth: 440, margin: '90px auto', textAlign: 'center' }}>
         <div style={{ fontSize: 14, fontWeight: 800, color: C.subtle }}>{msg}</div>
         {sub && <div style={{ fontSize: 12, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>{sub}</div>}
+        {onRetry && <button onClick={onRetry} style={{ marginTop: 16, padding: '9px 18px', borderRadius: 9, border: 'none', background: C.accent, color: '#0D0D0D', fontWeight: 800, cursor: 'pointer' }}>Reintentar</button>}
       </div>;
     }
     function Root() {
       const [email, setEmail] = useState(() => { try { return localStorage.getItem('nubiral_email') || ''; } catch (e) { return ''; } });
       const [state, setState] = useState('init'); // init | loading | ready | error
       const [errMsg, setErrMsg] = useState('');
-      const boot = (em) => {
-        setState('loading');
-        fetch(window.API_URL + '?action=bootstrap&email=' + encodeURIComponent(em), { credentials: 'omit' })
+      const boot = (em, intento) => {
+        intento = intento || 1;
+        setState(intento > 1 ? 'retry' : 'loading');
+        const ac = new AbortController();
+        const timer = setTimeout(() => { try { ac.abort(); } catch (e) {} }, 20000);
+        fetch(window.API_URL + '?action=bootstrap&email=' + encodeURIComponent(em), { credentials: 'omit', signal: ac.signal })
           .then(r => r.json())
-          .then(d => { window.INITIAL_DATA = (d && d.comunicados) || []; window.INITIAL_USER = (d && d.user) || { email: em, isAdmin: false }; setState('ready'); })
-          .catch(() => { setErrMsg('No pude conectar con la base de datos. Revisá que window.API_URL (arriba del index.html) tenga la URL /exec de tu Apps Script publicado como "Cualquier usuario".'); setState('error'); });
+          .then(d => { clearTimeout(timer); window.INITIAL_DATA = (d && d.comunicados) || []; window.INITIAL_USER = (d && d.user) || { email: em, isAdmin: false }; setState('ready'); })
+          .catch(() => {
+            clearTimeout(timer);
+            if (intento < 4) { setTimeout(() => boot(em, intento + 1), 1500); }
+            else { setErrMsg('Reintentamos varias veces y la base no respondió. Suele ser un problema momentáneo de Google (la base "se duerme" y tarda en despertar). Tocá Reintentar en unos segundos.'); setState('error'); }
+          });
       };
       useEffect(() => { if (email) boot(email); }, []);
       const login = (em) => { try { localStorage.setItem('nubiral_email', em); } catch (e) {} setEmail(em); boot(em); };
       const salir = () => { try { localStorage.removeItem('nubiral_email'); } catch (e) {} setEmail(''); setState('init'); };
       if (!email) return <LoginForm onLogin={login} />;
-      if (state === 'loading' || state === 'init') return <Pantalla msg="Cargando…" />;
-      if (state === 'error') return <Pantalla msg="Error de conexión" sub={errMsg} />;
+      if (state === 'loading' || state === 'init') return <Pantalla msg="Conectando…" sub="La primera carga del día puede tardar unos segundos mientras la base despierta." />;
+      if (state === 'retry') return <Pantalla msg="Reintentando conexión…" sub="La base tardó en responder. Probando de nuevo, un momento." />;
+      if (state === 'error') return <Pantalla msg="No pudimos conectar" sub={errMsg} onRetry={() => boot(email)} />;
       window.__logout = salir;
       return <App />;
     }
