@@ -52,6 +52,7 @@
           deleteItem: function (id) { post('deleteItem', { id: id }); return r; },
           enviarAAprobar: function (id, para, asunto, cuerpo) { post('enviarAAprobar', { id: id, para: para, asunto: asunto, cuerpo: cuerpo }); return r; },
           aprobarComunicado: function (id, decision, comentario) { post('aprobarComunicado', { id: id, decision: decision, comentario: comentario }); return r; },
+          sugerirCopy: function (datos) { post('sugerirCopy', { datos: datos }); return r; },
           getPendientesAprobar: function () { post('getPendientesAprobar', {}); return r; }
         };
         return r;
@@ -170,7 +171,18 @@
       }, base, prefillDate ? { fecha: prefillDate } : {}, replicarDe ? { id: undefined, aprobador: '', aprobado: '', comentario_aprobador: '', estado: 'Planificado' } : {}));
       const [saving, setSaving] = useState(false);
       const [aprobarModal, setAprobarModal] = useState(false);
+      const [sugiriendo, setSugiriendo] = useState(false);
       const set = (k, v) => setF(p => ({ ...p, [k]: v }));
+      const sugerirIA = () => {
+        if (!f.titulo.trim() && !f.tipo) { flash('Completá al menos el tipo o el título para sugerir.'); return; }
+        setSugiriendo(true);
+        google.script.run.withSuccessHandler(r => {
+          setSugiriendo(false);
+          if (r && r.success && r.copy) { set('copy', r.copy); flash('Borrador generado con IA'); }
+          else flash('IA: ' + ((r && r.error) || 'no se pudo generar.'));
+        }).withFailureHandler(() => { setSugiriendo(false); flash('Error al llamar la IA.'); })
+          .sugerirCopy({ tipo: f.tipo, titulo: f.titulo, objetivo: f.objetivo, canal: asArr(f.canal).join(', '), audiencia: asArr(f.audiencia).join(', ') });
+      };
       const readOnly = !isAdmin;
 
       const guardar = () => {
@@ -245,7 +257,10 @@
             </div>
 
             <div>
-              <label style={LBL}>Copy</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <label style={LBL}>Copy</label>
+                {!readOnly && <button type="button" onClick={sugerirIA} disabled={sugiriendo} style={{ fontSize: 11, fontWeight: 700, color: sugiriendo ? C.muted : C.accent, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '3px 9px', cursor: sugiriendo ? 'wait' : 'pointer', marginBottom: 5 }}>{sugiriendo ? 'Generando…' : '✨ Sugerir con IA'}</button>}
+              </div>
               {!readOnly && TEMPLATES.length > 0 && <select value="" onChange={e => { const t = TEMPLATES[e.target.value]; if (t) set('copy', t.texto); }}
                 style={{ ...INP, marginBottom: 6, fontSize: 12, color: C.subtle }}>
                 <option value="">↧ Insertar un template previo…</option>
