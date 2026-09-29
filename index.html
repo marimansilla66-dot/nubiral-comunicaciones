@@ -141,6 +141,23 @@
     }
 
     // ── Multi-selección por chips (canal, audiencia) ──────────────────────────
+    // Generador de borrador por plantilla (fallback sin IA)
+    function borradorPlantilla(f) {
+      const obj = (f.objetivo || '').toLowerCase();
+      const tit = f.titulo || 'esta novedad';
+      let apertura = 'Nubirals, ¡buenas! 👋';
+      let cierre = '¡Gracias!';
+      let medio;
+      if (obj.indexOf('celebr') >= 0) { apertura = 'Nubirals, ¡tenemos algo para celebrar! 🎉'; medio = 'Queremos compartirles ' + tit + '.'; cierre = '¡A festejarlo juntos!'; }
+      else if (obj.indexOf('integr') >= 0 || obj.indexOf('cercan') >= 0) { medio = 'Queremos invitarlos a ser parte de ' + tit + '.'; cierre = '¡Los esperamos!'; }
+      else if (obj.indexOf('form') >= 0 || obj.indexOf('crecim') >= 0) { medio = 'Les compartimos una oportunidad de formación: ' + tit + '.'; }
+      else { medio = 'Les compartimos información importante sobre ' + tit + '.'; }
+      const cat = ((f.tipo || '').toLowerCase().split(' ')[0]) || 'zzz';
+      const base = TEMPLATES.find(t => (t.categoria || '').toLowerCase().indexOf(cat) >= 0);
+      const ref = base ? ('\n\n—\nReferencia (template "' + base.titulo + '"):\n' + base.texto) : '';
+      return apertura + '\n\n' + medio + '\n\n[Completá acá el detalle: fechas, links, a quién aplica…]\n\n' + cierre + ref;
+    }
+
     function ChipMulti({ opciones, valor, onChange, disabled }) {
       const sel = asArr(valor);
       const toggle = o => { if (disabled) return; onChange(sel.indexOf(o) >= 0 ? sel.filter(x => x !== o) : [...sel, o]); };
@@ -178,9 +195,9 @@
         setSugiriendo(true);
         google.script.run.withSuccessHandler(r => {
           setSugiriendo(false);
-          if (r && r.success && r.copy) { set('copy', r.copy); flash('Borrador generado con IA'); }
-          else flash('IA: ' + ((r && r.error) || 'no se pudo generar.'));
-        }).withFailureHandler(() => { setSugiriendo(false); flash('Error al llamar la IA.'); })
+          if (r && r.success && r.copy) { set('copy', r.copy); flash(r.fuente ? ('Borrador generado — ' + r.fuente) : 'Borrador generado con IA'); }
+          else { set('copy', borradorPlantilla(f)); flash('IA no disponible, te dejé un borrador base para editar.'); }
+        }).withFailureHandler(() => { setSugiriendo(false); set('copy', borradorPlantilla(f)); flash('Sin conexión con la IA, te dejé un borrador base para editar.'); })
           .sugerirCopy({ tipo: f.tipo, titulo: f.titulo, objetivo: f.objetivo, canal: asArr(f.canal).join(', '), audiencia: asArr(f.audiencia).join(', ') });
       };
       const readOnly = !isAdmin;
